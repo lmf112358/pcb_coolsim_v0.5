@@ -1,0 +1,258 @@
+{
+  "harness": {
+    "version": "1.0.0",
+    "project": "PCB-CoolSim",
+    "description": "Harness engineering configuration for PCB Factory Cooling Simulation Platform",
+    "created": "2026-07-09",
+    "lastUpdated": "2026-07-09"
+  },
+
+  "documentation": {
+    "rootDir": "docs",
+    "structure": {
+      "adr": {
+        "path": "docs/adr",
+        "pattern": "*.md",
+        "template": "docs/adr/README.md"
+      },
+      "api": {
+        "path": "docs/api",
+        "pattern": "*.md"
+      },
+      "glossary": {
+        "path": "docs/glossary",
+        "pattern": "*.md"
+      },
+      "modules": {
+        "path": "docs/modules",
+        "pattern": "*.md"
+      },
+      "calculations": {
+        "path": "docs/calculations",
+        "pattern": "*.md"
+      },
+      "checklists": {
+        "path": "docs/checklists",
+        "pattern": "*.md"
+      }
+    },
+    "requiredFiles": [
+      "docs/DOCUMENTATION_MAP.md",
+      "docs/QUALITY_GATES.md",
+      "docs/CODE_DOC_INTERACTION.md",
+      "docs/glossary/CONTEXT.md"
+    ],
+    "versioning": {
+      "strategy": "semantic",
+      "format": "X.Y.Z"
+    }
+  },
+
+  "design": {
+    "rootDir": "design",
+    "structure": {
+      "architecture": {
+        "path": "design/architecture",
+        "requiredFiles": [
+          "system-architecture.md",
+          "api-design.md"
+        ]
+      },
+      "components": {
+        "path": "design/components"
+      },
+      "modules": {
+        "path": "design/modules"
+      },
+      "workflows": {
+        "path": "design/workflows"
+      }
+    }
+  },
+
+  "ui": {
+    "rootDir": "ui",
+    "structure": {
+      "designSystem": {
+        "path": "ui/design-system",
+        "requiredFiles": [
+          "design-system.md"
+        ]
+      },
+      "pages": {
+        "path": "ui/pages",
+        "requiredFiles": [
+          "page-designs.md"
+        ]
+      },
+      "components": {
+        "path": "ui/components"
+      }
+    }
+  },
+
+  "tests": {
+    "rootDir": "tests",
+    "structure": {
+      "unit": {
+        "path": "tests/unit"
+      },
+      "integration": {
+        "path": "tests/integration"
+      },
+      "e2e": {
+        "path": "tests/e2e"
+      },
+      "performance": {
+        "path": "tests/performance"
+      }
+    },
+    "requiredFiles": [
+      "tests/test-strategy.md",
+      "tests/test-plan.md"
+    ],
+    "coverage": {
+      "unit": 80,
+      "integration": 70,
+      "e2e": 60
+    }
+  },
+
+  "qualityGates": {
+    "phases": [
+      {
+        "id": "requirements",
+        "name": "Requirements Gate",
+        "phase": 1,
+        "checklist": "docs/QUALITY_GATES.md#21-requirements-gate-phase-1"
+      },
+      {
+        "id": "design",
+        "name": "Design Gate",
+        "phase": 2,
+        "checklist": "docs/QUALITY_GATES.md#22-design-gate-phase-2"
+      },
+      {
+        "id": "implementation",
+        "name": "Implementation Gate",
+        "phase": 3,
+        "checklist": "docs/QUALITY_GATES.md#23-implementation-gate-phase-3"
+      },
+      {
+        "id": "testing",
+        "name": "Testing Gate",
+        "phase": 4,
+        "checklist": "docs/QUALITY_GATES.md#24-testing-gate-phase-4"
+      },
+      {
+        "id": "release",
+        "name": "Release Gate",
+        "phase": 5,
+        "checklist": "docs/QUALITY_GATES.md#25-release-gate-phase-5"
+      }
+    ]
+  },
+
+  "traceability": {
+    "requirements": {
+      "source": "PCB工厂冷源仿真平台_PRD_v0.5.1_修订版.md",
+      "pattern": "F\\d+-\\d+"
+    },
+    "implementations": {
+      "source": "src/**/*.py",
+      "pattern": "PRD[:\\s]+(F\\d+-\\d+)"
+    },
+    "tests": {
+      "source": "tests/**/*.py",
+      "pattern": "TC-[A-Z]+-\\d+\\.\\d+"
+    }
+  },
+
+  "validation": {
+    "scripts": {
+      "apiDocs": "scripts/validate_api_docs.py",
+      "dbSchema": "scripts/validate_db_schema.py",
+      "calculations": "scripts/validate_calculations.py",
+      "docLinks": "scripts/validate_doc_links.py",
+      "requirementCoverage": "scripts/check_requirement_coverage.py"
+    },
+    "preCommitHooks": [
+      "validate_api_docs",
+      "validate_db_schema",
+      "validate_calculations",
+      "validate_doc_links"
+    ],
+    "ciChecks": [
+      "unit_tests",
+      "integration_tests",
+      "documentation_validation",
+      "coverage_report"
+    ]
+  },
+
+  "crossReferences": {
+    "mappings": [
+      {
+        "source": "PRD",
+        "target": "DB Design",
+        "checkpoints": ["field_names", "data_types", "requirements"]
+      },
+      {
+        "source": "PRD",
+        "target": "API Design",
+        "checkpoints": ["endpoint_coverage", "request_response"]
+      },
+      {
+        "source": "PRD",
+        "target": "UI Design",
+        "checkpoints": ["page_coverage", "interaction_flows"]
+      },
+      {
+        "source": "DB Design",
+        "target": "API Design",
+        "checkpoints": ["data_model_alignment"]
+      },
+      {
+        "source": "DB Design",
+        "target": "Calculation Spec",
+        "checkpoints": ["field_names", "calculation_logic"]
+      }
+    ]
+  },
+
+  "artifacts": {
+    "generated": [
+      "docs/api/openapi.yaml",
+      "docs/db/schema.md",
+      "docs/generated/coverage-report.html"
+    ],
+    "manual": [
+      "docs/DOCUMENTATION_MAP.md",
+      "docs/QUALITY_GATES.md",
+      "docs/CODE_DOC_INTERACTION.md"
+    ]
+  },
+
+  "metrics": {
+    "documentation": {
+      "coverage": "requirement_coverage_percent",
+      "freshness": "days_since_last_update",
+      "completeness": "required_files_present"
+    },
+    "quality": {
+      "gatePassRate": "gates_passed_first_time_percent",
+      "defectEscapeRate": "defects_found_after_release_percent",
+      "reviewTurnaround": "average_days_to_complete_review"
+    }
+  },
+
+  "notifications": {
+    "channels": ["email", "slack"],
+    "events": [
+      "quality_gate_failed",
+      "documentation_outdated",
+      "validation_error",
+      "coverage_below_threshold"
+    ]
+  }
+}

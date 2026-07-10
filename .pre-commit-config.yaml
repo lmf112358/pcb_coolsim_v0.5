@@ -1,0 +1,100 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.4.0
+    hooks:
+      - id: trailing-whitespace
+        name: 移除行尾空格
+      - id: end-of-file-fixer
+        name: 确保文件以换行符结尾
+      - id: check-yaml
+        name: 检查 YAML 语法
+      - id: check-json
+        name: 检查 JSON 语法
+      - id: check-added-large-files
+        name: 检查大文件
+        args: ['--maxkb=500']
+
+  - repo: https://github.com/psf/black
+    rev: 23.3.0
+    hooks:
+      - id: black
+        name: Python 代码格式化（Black）
+        language_version: python3.11
+
+  - repo: https://github.com/pycqa/isort
+    rev: 5.12.0
+    hooks:
+      - id: isort
+        name: Python 导入排序（isort）
+
+  - repo: https://github.com/pycqa/flake8
+    rev: 6.0.0
+    hooks:
+      - id: flake8
+        name: Python 代码检查（Flake8）
+
+  - repo: https://github.com/pre-commit/mirrors-prettier
+    rev: v3.0.0
+    hooks:
+      - id: prettier
+        name: 前端代码格式化（Prettier）
+        types_or: [css, javascript, json, markdown, yaml]
+
+  - repo: https://github.com/pre-commit/mirrors-eslint
+    rev: v8.44.0
+    hooks:
+      - id: eslint
+        name: 前端代码检查（ESLint）
+        files: \.tsx?$
+        types: [file]
+        additional_dependencies:
+          - eslint@8.44.0
+          - '@typescript-eslint/eslint-plugin@5.61.0'
+          - '@typescript-eslint/parser@5.61.0'
+
+  - repo: https://github.com/commitizen-tools/commitizen
+    rev: v3.5.3
+    hooks:
+      - id: commitizen
+        name: 提交信息格式检查（Commitizen）
+
+  - repo: https://github.com/commitizen-tools/commitizen
+    rev: v3.5.3
+    hooks:
+      - id: commitizen-branch
+        name: 分支命名规范检查
+        stages: [push]
+
+  - repo: local
+    hooks:
+      - id: check-prd-reference
+        name: 检查 PRD 引用
+        entry: python scripts/check_prd_reference.py
+        language: system
+        files: \.md$
+        pass_filenames: false
+
+      - id: check-spec-reference
+        name: 检查 Spec 引用
+        entry: python scripts/check_spec_reference.py
+        language: system
+        files: \.md$
+        pass_filenames: false
+
+      - id: validate-api-docs
+        name: 验证 API 文档
+        entry: python scripts/validate_api_docs.py
+        language: system
+        pass_filenames: false
+
+      - id: validate-db-schema
+        name: 验证数据库设计
+        entry: python scripts/validate_db_schema.py
+        language: system
+        pass_filenames: false
+
+      - id: validate-calculations
+        name: 验证计算规范
+        entry: python scripts/validate_calculations.py
+        language: system
+        pass_filenames: false
