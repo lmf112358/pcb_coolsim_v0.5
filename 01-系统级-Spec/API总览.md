@@ -1096,6 +1096,61 @@ X-Request-ID: {uuid} (optional, for tracing)
 
 ---
 
+## 12. Conversation (Dialogue Acquisition) API
+
+对话式采集（PRD §6.10）的后端接口，与 Projects/Buildings/Rooms 等 REST 接口共享同一数据模型，采用逐区域提交 / 保存即落库语义。
+
+### 12.1 Create or Resume Session
+
+**POST** `/api/v1/conversation/sessions/`
+
+**Request:**
+```json
+{ "project_id": 2, "resume_session_id": null }
+```
+
+**Response (200):**
+```json
+{ "success": true, "data": { "session_id": "uuid-...", "current_stage": "s1_project", "stage_status": {"s1_project":"done","s2_water_temp":"pending"} } }
+```
+
+### 12.2 Send Message (Next Question + Answer)
+
+**POST** `/api/v1/conversation/sessions/{id}/message/`
+
+**Request:**
+```json
+{ "message": "3 栋，每栋 5 层" }
+```
+
+**Response (200):**
+```json
+{ "success": true, "data": { "stage": "s3_building", "next_question": "请录入第 1 栋的建筑名称", "extracted": {"building_count": 3} } }
+```
+
+### 12.3 Get Session State
+
+**GET** `/api/v1/conversation/sessions/{id}/`
+
+**Response (200):** 返回 `current_stage`、`stage_status`、`draft_payload`（断点续采用）。
+
+### 12.4 Save Draft
+
+**PUT** `/api/v1/conversation/sessions/{id}/draft/`
+
+**Request:**
+```json
+{ "draft_payload": { "rooms": [{"room_name":"光刻间","status":"draft"}] } }
+```
+
+**Response (200):** `{ "success": true }`（房间以 `room.status = draft` 暂存）。
+
+### 12.5 Finalize
+
+**POST** `/api/v1/conversation/sessions/{id}/finalize/`
+
+**Response (200):** 将草稿 `room.status` 由 draft 转为 active，标记会话完成，返回汇总预览。
+
 ## Appendix: Error Codes Reference
 
 | Code | HTTP Status | Description |
