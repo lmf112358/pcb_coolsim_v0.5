@@ -21,7 +21,8 @@ Architecture Decision Records document significant architectural decisions made 
 | [ADR-0002](0002-async-celery-redis.md) | Async tasks with Celery + Redis | Accepted | 2026-07-09 | Tech Lead, Backend Lead |
 | [ADR-0003](0003-coefficient-table.md) | Consolidate coefficient tables into single matrix | Accepted | 2026-07-09 | Domain Expert, Architect |
 | [ADR-0004](0004-validation-v3.md) | Validation V3: Operating capacity validation | Accepted | 2026-07-09 | Domain Expert, QA Lead |
-| [ADR-0005](0005-pid-water-storage.md) | P&ID generation and water storage scope | Superseded (v0.5.1) | 2026-07-09 | Architect, PM |
+| [ADR-0005](0005-pid-water-storage.md) | P&ID generation and water storage scope | Superseded (v0.5.1) | 2026-07-09 | Architect, PM |
+| [ADR-0006](0006-missing-entities.md) | 缺失实体补齐 (Missing entity backfill) | Accepted | 2026-07-13 | Architect |
 
 ---
 
