@@ -10,7 +10,6 @@ PCB-CoolSim is a web-based platform for calculating and simulating cooling loads
 - Static Load Calculation: Design-day cooling load with < 0.1% deviation
 - Dynamic Simulation: 8760-hour annual simulation with weather data, < 1% deviation
 - 2D Visualization: Heatmap visualization of load distribution
-- Cooling Station Configuration: Chiller sizing and validation
 - Report Generation: PDF, Excel, CSV exports
 
 **Target Users:** HVAC Engineers, Project Managers, System Administrators
@@ -1214,3 +1213,48 @@ python scripts/update_traceability_matrix.py
 **当前状态**：PRD 已基线化，系统级和模块级 Spec 已完成，下一步是补充接口级和实现级 Spec，然后进入代码开发阶段。
 
 **关键原则**：PRD 是唯一需求源，Spec 是开发契约，测试是验证手段，文档是团队资产。
+
+---
+
+## Agent skills
+
+### Issue tracker
+
+本仓库使用本地 Markdown 问题追踪器：issue 以文件形式存放在仓库内 `.scratch/<feature>/` 目录。工程技能（triage / qa / to-issues / wayfinder 等）读写本地文件，无需 GitHub 鉴权。详见 `docs/agents/issue-tracker.md`。
+
+### Triage labels
+
+采用五个默认分诊角色标签：`needs-triage` / `needs-info` / `ready-for-agent` / `ready-for-human` / `wontfix`。详见 `docs/agents/triage-labels.md`。
+
+### Domain docs
+
+单上下文布局：根目录 `CONTEXT.md` 为领域词汇/上下文入口；架构决策记录（ADR）沿用现有 `09-参考文档/架构决策记录/` 目录（不另起 `docs/adr/`）。技能探索代码前先读 `CONTEXT.md` 与相关 ADR。详见 `docs/agents/domain.md`。
+
+---
+
+## 文档一致性规则（PRD 为唯一事实源）
+
+> 本规则用于指导全量文档的维护与重构，遵循**奥卡姆剃刀原则**：不引入不必要的实体/表/章节；移除冗余；复用既有结构；PRD 变更后依赖文档必须同步。
+
+### 1. 事实源与依赖方向
+- **PRD（`00-PRD/PRD_v0.5.1.md`）是唯一需求与数据模型事实源**。
+- 依赖链：PRD → 01-系统级-Spec → 02-模块级-Spec → 03-接口级-Spec → 04-实现级-Spec → 05-UI-UX-设计 → 06-测试文档 → 07-质量保障 → 08-运维文档 → 09-参考文档（术语表/ADR/用户故事） → 10-管理文档。
+- PRD 变更时，**下游所有文档必须同步**，不允许遗留断裂的交叉引用（章节号、表名、`SAC-xx`、附录 H）。
+
+### 2. 当前必须向下游传播的事实增量（docs/prd-revision 分支，4 个提交）
+- **模块五「冷站配置」已移除**（仅保留负荷分析）：所有 冷站配置 / 水蓄冷 / PID 相关描述须移除或收敛；`CLAUDE.md` Core Goals 中的 `Cooling Station Configuration` 须删除；相关 ADR（`09-参考文档/架构决策记录/ADR-0005-PID与水蓄冷范围.md`）须复核范围。
+- **模块二新增「对话式采集」（§6.10）**：须在 API 总览、数据库设计、系统架构设计、相关模块 Spec、页面设计总览、测试策略/计划、用户故事、完成报告等处同步新增。
+- **SOP 对齐既有数据字段**：对话采集六阶段（①项目基本信息[展示确认] ②冷冻水温度配置 ③建筑结构信息 ④功能区域参数 ⑤额外负荷信息 ⑥汇总预览与确认）与 `Project`/`WaterTempConfig`/`Building`/`Floor`/`Room`/`ExtraLoad`/`RoomCalcResult`/`LoadSummary` 严格对应；① 仅展示确认（项目创建时已在地图页关联气象）。
+- **附录 H / SAC**：新增需求 ID 与数量须自洽（附录 H 合计 53 / P0:46, P1:6, P2:1）。
+
+### 3. 奥卡姆剃刀约束
+- 不新增未在 PRD 出现的实体/表/章节；确需补充时先在 `09-参考文档/架构决策记录/` 落 ADR。
+- ADR 复用 `09-参考文档/架构决策记录/`，不另建 `docs/adr/`。
+- 删除内容时同步清理所有引用，不留死链。
+- 文档语言规范（见上文「文档语言规范」）：全部中文；代码标识符英文。
+
+### 4. 一致性校验清单（每次文档改动后自检）
+- [ ] 章节号、表名、`SAC-xx`、附录 H 引用自洽
+- [ ] 数据模型表名与附录 E 一致
+- [ ] 无与 PRD 矛盾的 stale 描述（如已移除的冷站配置）
+- [ ] 新增功能在依赖链各层均有落点
