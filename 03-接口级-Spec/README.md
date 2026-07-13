@@ -98,7 +98,6 @@
 - **PRD 引用**：F8-001, F8-002, F8-003, F8-004, F8-005
 - **主要端点**：
   - `POST /api/v1/exports/static-report/` - 导出静态计算报告
-  - `POST /api/v1/exports/station-report/` - 导出冷站配置报告
   - `POST /api/v1/exports/equipment-list/` - 导出设备清单
   - `POST /api/v1/exports/load-calculation-book/` - 导出负荷计算书
   - `POST /api/v1/exports/simulation-data/` - 导出仿真数据
