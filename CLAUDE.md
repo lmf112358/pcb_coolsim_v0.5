@@ -749,7 +749,7 @@ python scripts/generate_coverage_matrix.py
 - [ ] 补充实现级 Spec（算法实现细节）
 - [ ] 建立追溯性矩阵（PRD → Spec → Test）
 - [ ] 编写测试用例（基于 Spec）
-- [ ] 代码模板和示例
+- [x] 代码模板和示例
 
 #### 第三阶段：质量验证（下一阶段 ⏳）
 
@@ -1056,21 +1056,21 @@ python manage.py migrate app_name 0002 --fake
 - [x] 模块 09：系统设置与全局交互（module-09-system-settings.md）
 - [x] 模块 10：负荷预测（module-10-load-forecast.md）
 
-## 接口级 Spec ⏳
-- [ ] API 详细设计（api/auth-api.md）
-- [ ] API 详细设计（api/project-api.md）
-- [ ] API 详细设计（api/room-api.md）
-- [ ] API 详细设计（api/calculation-api.md）
-- [ ] API 详细设计（api/export-api.md）
-- [ ] 前端组件规范（ui/components/*.md）
-- [ ] 数据库表结构细化
+## 接口级 Spec ✅
+- [x] API 详细设计（api/auth-api.md）
+- [x] API 详细设计（api/project-api.md）
+- [x] API 详细设计（api/room-api.md）
+- [x] API 详细设计（api/calculation-api.md）
+- [x] API 详细设计（api/export-api.md）
+- [x] 前端组件规范（ui/components/*.md）
+- [x] 数据库表结构细化
 
-## 实现级 Spec ⏳
-- [ ] 计算逻辑实现细节
-- [ ] 算法伪代码
+## 实现级 Spec ✅
+- [x] 计算逻辑实现细节
+- [x] 算法伪代码
 - [ ] 代码模板
-- [ ] 测试用例设计
-- [ ] 追溯性矩阵
+- [x] 测试用例设计
+- [x] 追溯性矩阵
 ```
 
 #### 质量检查清单
@@ -1253,7 +1253,7 @@ python scripts/update_traceability_matrix.py
 - 文档语言规范（见上文「文档语言规范」）：全部中文；代码标识符英文。
 
 ### 4. 一致性校验清单（每次文档改动后自检）
-- [ ] 章节号、表名、`SAC-xx`、附录 H 引用自洽
-- [ ] 数据模型表名与附录 E 一致
+- [x] 章节号、表名、`SAC-xx`、附录 H 引用自洽
+- [x] 数据模型表名与附录 E 一致
 - [x] 无与 PRD 矛盾的 stale 描述（冷站配置 / 水蓄冷 / PID 已全量收敛，见 docs/prd-revision 各提交）
-- [ ] 新增功能在依赖链各层均有落点
+- [x] 新增功能在依赖链各层均有落点（对话式采集：PRD/01/02/03-API总览§12/04-测试/05-Page6/06-TC/09-用户故事 均有落点）
