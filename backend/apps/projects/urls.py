@@ -1,11 +1,18 @@
-"""项目/建筑/楼层/功能区域 URL 路由
+"""projects URL 路由（F2-001~026 层级 CRUD + F2-021 复制）"""
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
+from . import views
 
-端点对应 PRD 附录 D / 03-接口级-Spec/项目/建筑/楼层/功能区域相关接口文档
-"""
-from django.urls import path
+router = DefaultRouter()
+router.register(r"projects", views.ProjectViewSet)
+router.register(r"buildings", views.BuildingViewSet)
+router.register(r"floors", views.FloorViewSet)
+router.register(r"rooms", views.RoomViewSet)
 
-app_name = "projects"
-
-urlpatterns: list[path] = [
-    # TODO: 按 PRD F 编号逐步实现各端点
+urlpatterns = [
+    # 嵌套创建端点
+    path("projects/<int:project_pk>/buildings/", views.BuildingViewSet.as_view({"post": "create"}), name="building-create"),
+    path("buildings/<int:building_pk>/floors/", views.FloorViewSet.as_view({"post": "create"}), name="floor-create"),
+    path("floors/<int:floor_pk>/rooms/", views.RoomViewSet.as_view({"post": "create"}), name="room-create"),
+    path("", include(router.urls)),
 ]
