@@ -1,11 +1,14 @@
-"""负荷预测 URL 路由
+"""forecast URL 路由（F10-001~021）"""
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
+from . import views
 
-端点对应 PRD 附录 D / 03-接口级-Spec/负荷预测相关接口文档
-"""
-from django.urls import path
+router = DefaultRouter()
+router.register(r"forecast-scenarios", views.ForecastScenarioViewSet)
 
-app_name = "forecast"
-
-urlpatterns: list[path] = [
-    # TODO: 按 PRD F 编号逐步实现各端点
+urlpatterns = [
+    path("projects/<int:project_pk>/forecast-scenarios/",
+         views.ForecastScenarioViewSet.as_view({"post": "create", "get": "list"}),
+         name="forecast-scenario-create"),
+    path("", include(router.urls)),
 ]

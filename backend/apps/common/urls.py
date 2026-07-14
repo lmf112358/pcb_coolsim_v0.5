@@ -1,11 +1,16 @@
-"""公共配置 URL 路由
+"""common URL 路由（F9 系统设置）"""
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
+from . import views
 
-端点对应 PRD 附录 D / 03-接口级-Spec/公共配置相关接口文档
-"""
-from django.urls import path
+router = DefaultRouter()
+router.register(r"cities", views.CityConfigViewSet)
+router.register(r"water-temp-configs", views.WaterTempConfigViewSet)
 
-app_name = "common"
-
-urlpatterns: list[path] = [
-    # TODO: 按 PRD F 编号逐步实现各端点
+urlpatterns = [
+    path("projects/<int:project_pk>/water-temp-configs/",
+         views.WaterTempConfigViewSet.as_view({"post": "create", "get": "list"}),
+         name="water-temp-config-create"),
+    path("defaults/", views.get_defaults, name="get-defaults"),
+    path("", include(router.urls)),
 ]
