@@ -1,0 +1,40 @@
+{
+  "app": {
+    "title": "PCB Cooling Simulation",
+    "subtitle": "PCB-CoolSim"
+  },
+  "nav": {
+    "login": "Login",
+    "logout": "Logout",
+    "settings": "Settings",
+    "theme": "Theme",
+    "language": "Language"
+  },
+  "page": {
+    "login": "Login",
+    "mapHome": "Map Home",
+    "workbench": "Workbench",
+    "editor2d": "2D Editor",
+    "settings": "Settings",
+    "conversation": "Conversation"
+  },
+  "tab": {
+    "basic": "Basic Config",
+    "static": "Static Calc",
+    "analysis": "Load Analysis",
+    "dynamic": "Dynamic Sim",
+    "view2d": "2D View",
+    "forecast": "Forecast"
+  },
+  "calc": {
+    "civil": "Civil Load",
+    "lighting": "Lighting Load",
+    "personnel": "Personnel Load",
+    "electric": "Electric Equipment",
+    "heated": "Heated Equipment",
+    "terminal": "Terminal Load",
+    "freshAir": "Fresh Air Load",
+    "total": "Total Load",
+    "coldIndex": "Cold Index"
+  }
+}

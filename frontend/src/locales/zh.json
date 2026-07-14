@@ -1,0 +1,40 @@
+{
+  "app": {
+    "title": "PCB 冷量仿真平台",
+    "subtitle": "PCB-CoolSim"
+  },
+  "nav": {
+    "login": "登录",
+    "logout": "退出登录",
+    "settings": "系统设置",
+    "theme": "主题",
+    "language": "语言"
+  },
+  "page": {
+    "login": "登录",
+    "mapHome": "地图首页",
+    "workbench": "项目工作台",
+    "editor2d": "2D 编辑器",
+    "settings": "系统设置",
+    "conversation": "对话采集"
+  },
+  "tab": {
+    "basic": "基础配置",
+    "static": "静态计算",
+    "analysis": "负荷分析",
+    "dynamic": "动态仿真",
+    "view2d": "2D 展示",
+    "forecast": "负荷预测"
+  },
+  "calc": {
+    "civil": "土建负荷",
+    "lighting": "照明负荷",
+    "personnel": "人员负荷",
+    "electric": "电动设备",
+    "heated": "电热设备",
+    "terminal": "末端负荷",
+    "freshAir": "新风冷负荷",
+    "total": "总负荷",
+    "coldIndex": "冷指标"
+  }
+}

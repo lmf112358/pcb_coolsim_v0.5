@@ -1,0 +1,33 @@
+# PCB-CoolSim 后端运行时依赖
+# Python 3.11+（PRD 重要说明 #2）
+
+# Web 框架
+Django==5.0.6
+djangorestframework==3.15.1
+django-cors-headers==4.3.1
+djangorestframework-simplejwt==5.3.1
+
+# 数据库
+psycopg[binary]==3.1.19
+timescaledb==0.2.13
+
+# 异步任务（ADR-0002）
+celery==5.4.0
+redis==5.0.4
+django-celery-beat==2.6.0
+django-celery-results==2.5.1
+
+# 计算库（PRD §15 核心计算）
+numpy==1.26.4
+pandas==2.2.2
+psychrolib==2.5.0
+
+# 文件处理
+openpyxl==3.1.2          # Excel 导入导出
+reportlab==4.1.0         # PDF 报告
+minio==7.2.7             # S3 兼容对象存储
+
+# 工具
+python-dotenv==1.0.1
+gunicorn==22.0.0         # 生产 WSGI
+whitenoise==6.6.0        # 静态文件
