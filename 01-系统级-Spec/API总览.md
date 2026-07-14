@@ -1,55 +1,56 @@
-# PCB-CoolSim API Design Specification
+# PCB-CoolSim API 设计规范
 
-> Version: 1.0
-> Date: 2026-07-09
-> Status: Draft
-> Base URL: /api/v1
+> 版本: 1.1
+> 日期: 2026-07-14
+> 状态: 草稿
+> 基础 URL: /api/v1
+> 端点规模: 60+（认证 / 层级结构 / 计算 / 气象 / 平面图 / 导入导出 / 负荷预测 / 对话采集 / 数据管理 九大类）
 
 ---
 
-## 1. API Overview
+## 1. API 概述
 
-### 1.1 Design Principles
+### 1.1 设计原则
 
-- **RESTful:** Resources are nouns, HTTP methods are verbs
-- **Versioned:** URL path versioning (`/api/v1/`)
-- **Consistent:** Uniform response format across all endpoints
-- **Secure:** JWT authentication, role-based authorization
-- **Documented:** OpenAPI 3.0 specification
+- **RESTful:** 资源即名词，HTTP 方法即动词
+- **Versioned:** URL 路径版本控制（`/api/v1/`）
+- **Consistent:** 所有端点响应格式统一
+- **Secure:** JWT 认证，基于角色的授权
+- **Documented:** OpenAPI 3.0 规范
 
-### 1.2 Common Headers
+### 1.2 通用请求头
 
 ```
 Authorization: Bearer {access_token}
 Content-Type: application/json
 Accept: application/json
-X-Request-ID: {uuid} (optional, for tracing)
+X-Request-ID: {uuid} (可选，用于链路追踪)
 ```
 
-### 1.3 Common Response Codes
+### 1.3 通用响应状态码
 
-| Code | Meaning | Usage |
+| 状态码 | 含义 | 使用场景 |
 |------|---------|-------|
-| 200 | OK | Successful GET, PUT |
-| 201 | Created | Successful POST |
-| 204 | No Content | Successful DELETE |
-| 400 | Bad Request | Validation error |
-| 401 | Unauthorized | Invalid/missing token |
-| 403 | Forbidden | Insufficient permissions |
-| 404 | Not Found | Resource doesn't exist |
-| 409 | Conflict | Duplicate resource |
-| 422 | Unprocessable Entity | Business logic error |
-| 500 | Internal Server Error | Server error |
+| 200 | 成功 | GET、PUT 成功 |
+| 201 | 已创建 | POST 成功 |
+| 204 | 无内容 | DELETE 成功 |
+| 400 | 请求错误 | 校验错误 |
+| 401 | 未授权 | 令牌无效或缺失 |
+| 403 | 禁止 | 权限不足 |
+| 404 | 未找到 | 资源不存在 |
+| 409 | 冲突 | 资源重复 |
+| 422 | 不可处理实体 | 业务逻辑错误 |
+| 500 | 服务器内部错误 | 服务器错误 |
 
 ---
 
-## 2. Authentication API
+## 2. 认证 API
 
-### 2.1 Login
+### 2.1 登录
 
 **POST** `/api/v1/auth/login/`
 
-**Request:**
+**请求：**
 ```json
 {
   "username": "engineer@example.com",
@@ -57,7 +58,7 @@ X-Request-ID: {uuid} (optional, for tracing)
 }
 ```
 
-**Response (200):**
+**响应 (200)：**
 ```json
 {
   "success": true,
@@ -77,7 +78,7 @@ X-Request-ID: {uuid} (optional, for tracing)
 }
 ```
 
-**Error (401):**
+**错误 (401)：**
 ```json
 {
   "success": false,
@@ -88,18 +89,18 @@ X-Request-ID: {uuid} (optional, for tracing)
 }
 ```
 
-### 2.2 Refresh Token
+### 2.2 刷新令牌
 
 **POST** `/api/v1/auth/refresh/`
 
-**Request:**
+**请求：**
 ```json
 {
   "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
 }
 ```
 
-**Response (200):**
+**响应 (200)：**
 ```json
 {
   "success": true,
@@ -110,36 +111,55 @@ X-Request-ID: {uuid} (optional, for tracing)
 }
 ```
 
-### 2.3 Logout
+### 2.3 登出
 
 **POST** `/api/v1/auth/logout/`
 
-**Request:**
+**请求：**
 ```json
 {
   "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
 }
 ```
 
-**Response (204):** No Content
+**响应 (204)：** 无内容
+
+### 2.4 获取当前用户信息
+
+**GET** `/api/v1/auth/me/`
+
+**响应 (200)：**
+```json
+{
+  "success": true,
+  "data": {
+    "id": 1,
+    "username": "engineer@example.com",
+    "email": "engineer@example.com",
+    "full_name": "John Doe",
+    "role": "engineer",
+    "permissions": ["project:read", "project:write", "calc:execute"]
+  }
+}
+```
 
 ---
 
-## 3. Projects API
+## 3. 项目 API
 
-### 3.1 List Projects
+### 3.1 项目列表
 
 **GET** `/api/v1/projects/`
 
-**Query Parameters:**
-| Parameter | Type | Required | Description |
+**查询参数：**
+| 参数 | 类型 | 必填 | 说明 |
 |-----------|------|----------|-------------|
-| page | integer | No | Page number (default: 1) |
-| page_size | integer | No | Items per page (default: 20, max: 100) |
-| search | string | No | Search by name or code |
-| status | string | No | Filter by status (active, archived) |
+| page | integer | 否 | 页码（默认：1） |
+| page_size | integer | 否 | 每页条数（默认：20，最大：100） |
+| search | string | 否 | 按名称或编码搜索 |
+| status | string | 否 | 按状态筛选（active、archived） |
 
-**Response (200):**
+**响应 (200)：**
 ```json
 {
   "success": true,
@@ -172,11 +192,11 @@ X-Request-ID: {uuid} (optional, for tracing)
 }
 ```
 
-### 3.2 Create Project
+### 3.2 创建项目
 
 **POST** `/api/v1/projects/`
 
-**Request:**
+**请求：**
 ```json
 {
   "project_name": "深圳宝安 PCB 工厂",
@@ -187,7 +207,7 @@ X-Request-ID: {uuid} (optional, for tracing)
 }
 ```
 
-**Response (201):**
+**响应 (201)：**
 ```json
 {
   "success": true,
@@ -221,11 +241,11 @@ X-Request-ID: {uuid} (optional, for tracing)
 }
 ```
 
-### 3.3 Get Project Details
+### 3.3 获取项目详情
 
 **GET** `/api/v1/projects/{id}/`
 
-**Response (200):**
+**响应 (200)：**
 ```json
 {
   "success": true,
@@ -259,11 +279,11 @@ X-Request-ID: {uuid} (optional, for tracing)
 }
 ```
 
-### 3.4 Update Project
+### 3.4 更新项目
 
 **PUT** `/api/v1/projects/{id}/`
 
-**Request:**
+**请求：**
 ```json
 {
   "project_name": "上海松江 AI 服务器 PCB 工厂（二期）",
@@ -271,19 +291,19 @@ X-Request-ID: {uuid} (optional, for tracing)
 }
 ```
 
-**Response (200):** Same as Get Project Details
+**响应 (200)：** 同「获取项目详情」
 
-### 3.5 Delete Project
+### 3.5 删除项目
 
 **DELETE** `/api/v1/projects/{id}/`
 
-**Response (204):** No Content
+**响应 (204)：** 无内容
 
-### 3.6 Get Project Summary
+### 3.6 获取项目汇总
 
 **GET** `/api/v1/projects/{id}/summary/`
 
-**Response (200):**
+**响应 (200)：**
 ```json
 {
   "success": true,
@@ -314,20 +334,20 @@ X-Request-ID: {uuid} (optional, for tracing)
 
 ---
 
-## 4. Buildings API
+## 4. 建筑 API
 
-### 4.1 List Buildings
+### 4.1 建筑列表
 
 **GET** `/api/v1/buildings/?project={project_id}`
 
-**Query Parameters:**
-| Parameter | Type | Required | Description |
+**查询参数：**
+| 参数 | 类型 | 必填 | 说明 |
 |-----------|------|----------|-------------|
-| project | integer | Yes | Project ID |
-| page | integer | No | Page number |
-| page_size | integer | No | Items per page |
+| project | integer | 是 | 项目 ID |
+| page | integer | 否 | 页码 |
+| page_size | integer | 否 | 每页条数 |
 
-**Response (200):**
+**响应 (200)：**
 ```json
 {
   "success": true,
@@ -348,11 +368,11 @@ X-Request-ID: {uuid} (optional, for tracing)
 }
 ```
 
-### 4.2 Create Building
+### 4.2 创建建筑
 
 **POST** `/api/v1/buildings/`
 
-**Request:**
+**请求：**
 ```json
 {
   "project_id": 1,
@@ -362,7 +382,7 @@ X-Request-ID: {uuid} (optional, for tracing)
 }
 ```
 
-**Response (201):**
+**响应 (201)：**
 ```json
 {
   "success": true,
@@ -379,13 +399,13 @@ X-Request-ID: {uuid} (optional, for tracing)
 
 ---
 
-## 5. Floors API
+## 5. 楼层 API
 
-### 5.1 List Floors
+### 5.1 楼层列表
 
 **GET** `/api/v1/floors/?building={building_id}`
 
-**Response (200):**
+**响应 (200)：**
 ```json
 {
   "success": true,
@@ -403,11 +423,11 @@ X-Request-ID: {uuid} (optional, for tracing)
 }
 ```
 
-### 5.2 Create Floor
+### 5.2 创建楼层
 
 **POST** `/api/v1/floors/`
 
-**Request:**
+**请求：**
 ```json
 {
   "building_id": 1,
@@ -417,21 +437,21 @@ X-Request-ID: {uuid} (optional, for tracing)
 
 ---
 
-## 6. Rooms API
+## 6. 房间 API
 
-### 6.1 List Rooms
+### 6.1 房间列表
 
 **GET** `/api/v1/rooms/?floor={floor_id}`
 
-**Query Parameters:**
-| Parameter | Type | Required | Description |
+**查询参数：**
+| 参数 | 类型 | 必填 | 说明 |
 |-----------|------|----------|-------------|
-| floor | integer | Yes | Floor ID |
-| page | integer | No | Page number |
-| page_size | integer | No | Items per page |
-| search | string | No | Search by name or code |
+| floor | integer | 是 | 楼层 ID |
+| page | integer | 否 | 页码 |
+| page_size | integer | 否 | 每页条数 |
+| search | string | 否 | 按名称或编码搜索 |
 
-**Response (200):**
+**响应 (200)：**
 ```json
 {
   "success": true,
@@ -457,11 +477,11 @@ X-Request-ID: {uuid} (optional, for tracing)
 }
 ```
 
-### 6.2 Create Room
+### 6.2 创建房间
 
 **POST** `/api/v1/rooms/`
 
-**Request:**
+**请求：**
 ```json
 {
   "floor_id": 1,
@@ -493,7 +513,7 @@ X-Request-ID: {uuid} (optional, for tracing)
 }
 ```
 
-**Response (201):**
+**响应 (201)：**
 ```json
 {
   "success": true,
@@ -511,11 +531,11 @@ X-Request-ID: {uuid} (optional, for tracing)
 }
 ```
 
-### 6.3 Get Room Details
+### 6.3 获取房间详情
 
 **GET** `/api/v1/rooms/{id}/`
 
-**Response (200):**
+**响应 (200)：**
 ```json
 {
   "success": true,
@@ -571,29 +591,46 @@ X-Request-ID: {uuid} (optional, for tracing)
 }
 ```
 
-### 6.4 Update Room
+### 6.4 更新房间
 
 **PUT** `/api/v1/rooms/{id}/`
 
-**Request:** Same as Create Room (partial updates supported)
+**请求：** 同「创建房间」（支持部分更新）
 
-### 6.5 Delete Room
+### 6.5 删除房间
 
 **DELETE** `/api/v1/rooms/{id}/`
 
-**Response (204):** No Content
+**响应 (204)：** 无内容
+
+### 6.6 复制功能区域
+
+**POST** `/api/v1/rooms/{id}/copy/`
+
+**请求：**
+```json
+{
+  "target_floor_id": 1,
+  "new_room_name": "电镀车间（副本）",
+  "copy_load_parameters": true,
+  "copy_air_volume_parameters": true,
+  "count": 1
+}
+```
+
+**响应 (201)：** 返回新建房间（结构同「获取房间详情」）。
 
 ---
 
-## 7. Calculations API
+## 7. 计算 API
 
-### 7.1 Calculate Static Load (Single Room)
+### 7.1 计算静态负荷（单房间）
 
 **POST** `/api/v1/rooms/{id}/calculate-static/`
 
-**Request:** No body required (uses current room parameters)
+**请求：** 无需请求体（使用当前房间参数）
 
-**Response (200):**
+**响应 (200)：**
 ```json
 {
   "success": true,
@@ -648,11 +685,11 @@ X-Request-ID: {uuid} (optional, for tracing)
 }
 ```
 
-### 7.2 Calculate Static Load (Batch)
+### 7.2 计算静态负荷（批量）
 
 **POST** `/api/v1/projects/{id}/calculate-static/`
 
-**Request:**
+**请求：**
 ```json
 {
   "building_ids": [1, 2],
@@ -675,18 +712,18 @@ X-Request-ID: {uuid} (optional, for tracing)
 }
 ```
 
-### 7.3 Get Static Calculation Results
+### 7.3 获取静态计算结果
 
 **GET** `/api/v1/calculations/static/{project_id}/`
 
-**Query Parameters:**
-| Parameter | Type | Required | Description |
+**查询参数：**
+| 参数 | 类型 | 必填 | 说明 |
 |-----------|------|----------|-------------|
-| building_id | integer | No | Filter by building |
-| floor_id | integer | No | Filter by floor |
-| water_tier_id | integer | No | Filter by water temperature tier |
+| building_id | integer | 否 | 按建筑筛选 |
+| floor_id | integer | 否 | 按楼层筛选 |
+| water_tier_id | integer | 否 | 按水温梯度筛选 |
 
-**Response (200):**
+**响应 (200)：**
 ```json
 {
   "success": true,
@@ -737,20 +774,23 @@ X-Request-ID: {uuid} (optional, for tracing)
 }
 ```
 
-### 7.4 Run Dynamic Simulation
+### 7.4 运行动态仿真
 
 **POST** `/api/v1/projects/{id}/simulate/`
 
-**Request:**
+**请求：**
 ```json
 {
-  "simulation_type": "weather_driven",
+  "mode": "weather_driven",
   "years": 3,
   "start_date": "2023-01-01",
   "building_ids": null,
-  "room_ids": null
+  "room_ids": null,
+  "production_rate": 1.0
 }
 ```
+
+> `mode` 取值 `weather_driven`（F6-001，气象驱动逐时重算焓值）或 `ratio_coefficient`（F6-002，ADR-0003 比例系数法，静态设计负荷 × K(t, 生产负荷率)）。对应创建一条 SimulationRun 记录，结果落 DynamicLoadHourly / DynamicLoadSummary。
 
 **Response (202):**
 ```json
@@ -758,6 +798,7 @@ X-Request-ID: {uuid} (optional, for tracing)
   "success": true,
   "data": {
     "task_id": "sim-dynamic-20260709-001",
+    "simulation_run_id": 42,
     "status": "processing",
     "message": "Dynamic simulation started (8760h × 3 years × 135 rooms)",
     "estimated_time_seconds": 25,
@@ -766,19 +807,19 @@ X-Request-ID: {uuid} (optional, for tracing)
 }
 ```
 
-### 7.5 Get Simulation Results
+### 7.5 获取仿真结果
 
 **GET** `/api/v1/calculations/dynamic/{project_id}/`
 
-**Query Parameters:**
-| Parameter | Type | Required | Description |
+**查询参数：**
+| 参数 | 类型 | 必填 | 说明 |
 |-----------|------|----------|-------------|
-| room_id | integer | No | Filter by room |
-| year | integer | No | Filter by year |
-| month | integer | No | Filter by month |
-| aggregation | string | No | hourly, daily, monthly |
+| room_id | integer | 否 | 按房间筛选 |
+| year | integer | 否 | 按年份筛选 |
+| month | integer | 否 | 按月份筛选 |
+| aggregation | string | 否 | hourly、daily、monthly |
 
-**Response (200):**
+**响应 (200)：**
 ```json
 {
   "success": true,
@@ -816,23 +857,39 @@ X-Request-ID: {uuid} (optional, for tracing)
 }
 ```
 
+### 7.6 获取逐时负荷数据
+
+**GET** `/api/v1/calculations/dynamic/{project_id}/hourly/`
+
+**查询参数：** `room_id`、`year`、`start`、`end`
+
+**响应 (200)：** 返回指定范围逐时负荷明细（每功能区域约 26280 行/3 年），支撑 26280 点图表渲染 < 3s（NF-007）。源数据来自 DynamicLoadHourly 超表。
+
+### 7.7 获取极值统计
+
+**GET** `/api/v1/calculations/dynamic/{project_id}/summary/`
+
+**查询参数：** `room_id`、`year`
+
+**响应 (200)：** 返回最大/最小/平均负荷、出现时间、总能量（聚合自 DynamicLoadSummary）。
+
 ---
 
-## 8. Weather API
+## 8. 气象 API
 
-### 8.1 Get Weather Data
+### 8.1 获取气象数据
 
 **GET** `/api/v1/weather/?city={city_id}`
 
-**Query Parameters:**
-| Parameter | Type | Required | Description |
+**查询参数：**
+| 参数 | 类型 | 必填 | 说明 |
 |-----------|------|----------|-------------|
-| city | integer | Yes | City ID |
-| year | integer | No | Filter by year |
-| start_date | string | No | Start date (YYYY-MM-DD) |
-| end_date | string | No | End date (YYYY-MM-DD) |
+| city | integer | 是 | 城市 ID |
+| year | integer | 否 | 按年份筛选 |
+| start_date | string | 否 | 开始日期（YYYY-MM-DD） |
+| end_date | string | 否 | 结束日期（YYYY-MM-DD） |
 
-**Response (200):**
+**响应 (200)：**
 ```json
 {
   "success": true,
@@ -858,11 +915,11 @@ X-Request-ID: {uuid} (optional, for tracing)
 }
 ```
 
-### 8.2 Fetch Weather Data from API
+### 8.2 从 API 获取气象数据
 
 **POST** `/api/v1/weather/fetch/`
 
-**Request:**
+**请求：**
 ```json
 {
   "city_id": 1,
@@ -883,13 +940,13 @@ X-Request-ID: {uuid} (optional, for tracing)
 }
 ```
 
-### 8.3 Upload Weather Data
+### 8.3 上传气象数据
 
 **POST** `/api/v1/weather/upload/`
 
-**Request:** Multipart form data with CSV or EPW file
+**请求：** 包含 CSV 或 EPW 文件的多部分表单数据
 
-**Response (200):**
+**响应 (200)：**
 ```json
 {
   "success": true,
@@ -914,21 +971,20 @@ X-Request-ID: {uuid} (optional, for tracing)
 
 ---
 
-## 9. Exports API
+## 9. 导出 API
 
-### 9.1 Export Static Calculation Report
+> 导出路径对齐 PRD 附录 D「导入导出接口」，统一前缀 `/api/v1/export/`。报告生成走 Celery（PDF < 30s，Excel < 10s，NF-011）。
 
-**POST** `/api/v1/exports/static-report/{project_id}/`
+### 9.1 导出静态计算报告（PDF）
 
-**Request:**
-```json
-{
-  "format": "pdf",
-  "building_ids": null,
-  "include_details": true,
-  "language": "zh"
-}
-```
+**GET** `/api/v1/export/static/{project_id}/`
+
+**查询参数：**
+| 参数 | 类型 | 必填 | 说明 |
+|-----------|------|----------|-------------|
+| building_ids | string | 否 | 逗号分隔的建筑 ID |
+| include_details | boolean | 否 | 是否含明细（默认 true） |
+| language | string | 否 | zh / en（默认 zh） |
 
 **Response (202):**
 ```json
@@ -943,44 +999,49 @@ X-Request-ID: {uuid} (optional, for tracing)
 }
 ```
 
-### 9.2 Export Equipment List
+### 9.2 导出设备清单（Excel）
 
-**POST** `/api/v1/exports/equipment-list/{project_id}/`
+**GET** `/api/v1/export/equipment/{project_id}/`
 
-**Request:**
-```json
-{
-  "format": "excel",
-  "building_ids": [1, 2]
-}
-```
+**查询参数：** `building_ids`（逗号分隔，可选）
 
-**Response (202):**
-```json
-{
-  "success": true,
-  "data": {
-    "task_id": "export-equipment-20260709-001",
-    "status": "processing"
-  }
-}
-```
+**Response (202):** 同 9.1 结构，`task_id` 为 `export-equipment-...`。
 
-### 9.3 Download Exported File
+### 9.3 导出负荷计算书（Excel）
+
+**GET** `/api/v1/export/calc-book/{project_id}/`
+
+**查询参数：** `building_ids`、`floor_ids`、`language`
+
+**Response (202):** 返回 task_id；计算书含各功能区域六步流水线明细与汇总，列结构与设计院冷热负荷计算书对齐（PRD 附录 A）。
+
+### 9.4 导出仿真数据（CSV）
+
+**GET** `/api/v1/export/dynamic/{project_id}/`
+
+**查询参数：**
+| 参数 | 类型 | 必填 | 说明 |
+|-----------|------|----------|-------------|
+| room_id | integer | 否 | 按功能区域筛选 |
+| year | integer | 否 | 按年份筛选 |
+
+**Response (202):** 返回 task_id；导出逐时负荷明细（约 26280 行/功能区域）。
+
+### 9.5 下载导出文件
 
 **GET** `/api/v1/exports/download/{task_id}/`
 
-**Response (200):** File download (application/pdf, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, text/csv)
+**响应 (200)：** 文件下载（application/pdf、application/vnd.openxmlformats-officedocument.spreadsheetml.sheet、text/csv）
 
 ---
 
-## 10. Settings API
+## 10. 设置 API
 
-### 10.1 Get Water Temperature Configurations
+### 10.1 获取水温配置
 
 **GET** `/api/v1/settings/water-temperature/?project={project_id}`
 
-**Response (200):**
+**响应 (200)：**
 ```json
 {
   "success": true,
@@ -1006,11 +1067,11 @@ X-Request-ID: {uuid} (optional, for tracing)
 }
 ```
 
-### 10.2 Update Water Temperature Configuration
+### 10.2 更新水温配置
 
 **PUT** `/api/v1/settings/water-temperature/{id}/`
 
-**Request:**
+**请求：**
 ```json
 {
   "name": "低温（修改）",
@@ -1019,11 +1080,11 @@ X-Request-ID: {uuid} (optional, for tracing)
 }
 ```
 
-### 10.3 Get Default Parameters
+### 10.3 获取默认参数
 
-**GET** `/api/v1/settings/defaults/`
+**GET** `/api/v1/defaults/`
 
-**Response (200):**
+**响应 (200)：**
 ```json
 {
   "success": true,
@@ -1043,15 +1104,194 @@ X-Request-ID: {uuid} (optional, for tracing)
 }
 ```
 
+### 10.4 更新默认参数
+
+**PUT** `/api/v1/defaults/`
+
+支持系统级 / 项目级 / 建筑级 / 楼层级四级覆盖（`scope` = system / project / building / floor，PRD F9-006~F9-010），含压差渗透系数表与空气密度。
+
 ---
 
-## 11. WebSocket API
+## 11. 数据管理 API
 
-### 11.1 Task Progress Updates
+> 对齐 PRD 附录 D「数据管理接口」。城市/国标参数为只读预置；其余 CRUD。
 
-**Connection:** `ws://localhost:8000/ws/tasks/{task_id}/`
+### 11.1 城市与国标参数（只读）
 
-**Messages (Server → Client):**
+**GET** `/api/v1/cities/` — 城市列表（含省份、室外设计参数概要），约 300 城市，查询 < 1s（NF-010）。
+
+**GET** `/api/v1/cities/{id}/` — 城市国标参数详情（夏季/冬季干球、湿球、室外计算参数等）。
+
+### 11.2 项目级冷冻水温度档
+
+**GET** `/api/v1/projects/{project_id}/water-temp-configs/` — 列表
+**POST** `/api/v1/projects/{project_id}/water-temp-configs/` — 新增档位（如低温 7/12、中温 12/17）
+**PUT** `/api/v1/water-temp-configs/{id}/` — 更新
+**DELETE** `/api/v1/water-temp-configs/{id}/` — 删除
+
+> 对应 WaterTempConfig 表与 ADR-0001（末端负荷按功能区域级冷冻水档分配）。
+
+### 11.3 额外负荷
+
+**GET/POST** `/api/v1/projects/{project_id}/extra-loads/`
+**GET/PUT/DELETE** `/api/v1/extra-loads/{id}/`
+
+> 对应 ExtraLoad 表（PCW、配电室空调等额外冷负荷）。
+
+### 11.4 功能区域模板
+
+**GET/POST** `/api/v1/room-templates/`
+**GET/PUT/DELETE** `/api/v1/room-templates/{id}/`
+
+> 对应 RoomTemplate 表，含系统内置 PCB 典型工艺区域参考模板（曝光区/电镀区/蚀刻区等，PRD 附录 B、F2-026）。
+
+---
+
+## 12. Excel 导入 API
+
+### 12.1 下载导入模板
+
+**GET** `/api/v1/import/template/`
+
+**查询参数：** `language`（默认 zh）
+
+**响应 (200)：** Excel 模板下载，列结构与设计院冷热负荷计算书对齐（PRD 附录 A、F2-032）。
+
+### 12.2 上传 Excel 导入
+
+**POST** `/api/v1/import/excel/{project_id}/`
+
+**请求：** 多部分表单数据（file + 可选 building_id / floor_id）
+
+**Response (202):**
+```json
+{
+  "success": true,
+  "data": {
+    "task_id": "import-excel-20260714-001",
+    "status": "processing",
+    "message": "Importing Excel, 10000+ rows < 30s (NF-003)",
+    "websocket_url": "ws://localhost:8000/ws/tasks/import-excel-20260714-001/"
+  }
+}
+```
+
+> 完成后返回校验结果：成功条数、错误行（定位到行号，PRD F2-034）、覆盖确认。
+
+---
+
+## 13. 平面图 API
+
+> 对齐 PRD 附录 D「平面图接口」（模块三 2D 可视化）。
+
+### 13.1 上传底图 PDF
+
+**POST** `/api/v1/floors/{floor_id}/floor-plan/upload/`
+
+**请求：** 多部分表单数据（PDF 文件）
+
+**响应 (200)：** 返回底图存储地址（MinIO）与解析的页面信息。
+
+### 13.2 获取平面图数据
+
+**GET** `/api/v1/floors/{floor_id}/floor-plan/`
+
+**响应 (200)：** 返回底图 URL + 绘制元素 JSON（外墙/功能区域矩形/比例尺/指北针）。
+
+### 13.3 保存平面图编辑
+
+**PUT** `/api/v1/floors/{floor_id}/floor-plan/`
+
+**请求：** 绘制元素 JSON（整层覆盖，F3-011）
+
+### 13.4 获取未关联功能区域列表
+
+**GET** `/api/v1/floors/{floor_id}/floor-plan/available-rooms/`
+
+**响应 (200)：** 当前楼层未绑定到平面图色块的功能区域列表，供绘制后关联。
+
+---
+
+## 14. 负荷预测 API
+
+> 对齐 PRD 模块十（§14）与附录 D「负荷预测接口」，共 12 端点。基于未来天气预报 + 生产负荷率配置，使用比例系数法预测未来 7×24 小时逐时负荷（功能区域级粒度）。
+
+### 14.1 创建预测场景
+
+**POST** `/api/v1/projects/{project_id}/forecast-scenarios/`
+
+**请求：**
+```json
+{
+  "scenario_name": "夏季满产预测",
+  "weather_source": "api",
+  "production_rate_profile": null,
+  "status": "active"
+}
+```
+
+### 14.2 获取场景列表
+
+**GET** `/api/v1/projects/{project_id}/forecast-scenarios/`
+
+### 14.3 更新场景配置
+
+**PUT** `/api/v1/forecast-scenarios/{id}/`
+
+### 14.4 删除场景
+
+**DELETE** `/api/v1/forecast-scenarios/{id}/` — 级联删除天气/负荷率/结果。
+
+### 14.5 更新场景状态
+
+**PUT** `/api/v1/forecast-scenarios/{id}/status/`
+
+**请求：** `{ "status": "active | paused | archived" }`
+
+> active 场景由 Celery beat 每小时自动拉取天气并重算（ADR-0002）。
+
+### 14.6 手动上传天气数据
+
+**POST** `/api/v1/forecast-scenarios/{id}/weather/upload/` — 多部分表单数据（CSV，手动模式）。
+
+### 14.7 获取天气数据概览
+
+**GET** `/api/v1/forecast-scenarios/{id}/weather/summary/` — 未来 7 天逐时天气概览 + 来源标记。
+
+### 14.8 生产负荷率配置（CRUD）
+
+**GET/POST** `/api/v1/forecast-scenarios/{id}/production-rates/`
+**GET/PUT/DELETE** `/api/v1/forecast-scenarios/{id}/production-rates/{rate_id}/`
+
+> 多段配置（值 + 持续时长），对齐 ForecastProductionRate 表。
+
+### 14.9 手动触发预测计算
+
+**POST** `/api/v1/forecast-scenarios/{id}/run/` — 异步触发，返回 task_id + websocket_url。
+
+### 14.10 获取预测结果
+
+**GET** `/api/v1/forecast-scenarios/{id}/results/`
+
+**查询参数：** `room_id`、`start`、`end`（按时间筛选）。返回 7×24=168 点逐时预测（功能区域级粒度）。
+
+### 14.11 获取历史版本列表
+
+**GET** `/api/v1/forecast-scenarios/{id}/results/versions/` — 历次预测版本（PRD §14.7 保留策略）。
+
+### 14.12 导出预测结果（CSV）
+
+**GET** `/api/v1/forecast-scenarios/{id}/results/export/`
+
+---
+
+## 15. WebSocket API
+
+### 15.1 任务进度更新
+
+**连接：** `ws://localhost:8000/ws/tasks/{task_id}/`
+
+**消息（服务端 → 客户端）：**
 ```json
 {
   "type": "progress",
@@ -1096,18 +1336,95 @@ X-Request-ID: {uuid} (optional, for tracing)
 
 ---
 
-## Appendix: Error Codes Reference
+## 16. 对话式采集 API
 
-| Code | HTTP Status | Description |
+对话式采集（PRD §6.10，ADR-0007）的后端接口，共 6 个端点。与 Projects/Buildings/Rooms 等 REST 接口共享同一数据模型（project→building→floor→room + 区域参数），采用逐区域提交 / 保存即落库语义；与新建的《03-接口级-Spec/对话采集接口.md》一一对应。会话持久化对应 ConversationSession / ConversationMessage 表，房间先以 `room.status = draft` 暂存，确认后转 active（F2-057/F2-058）。
+
+### 16.1 创建或恢复会话
+
+**POST** `/api/v1/conversation/sessions/`
+
+**请求：**
+```json
+{ "project_id": 2, "resume_session_id": null }
+```
+
+**响应 (200)：**
+```json
+{ "success": true, "data": { "session_id": "uuid-...", "current_stage": "s1_project", "stage_status": {"s1_project":"done","s2_water_temp":"pending"} } }
+```
+
+### 16.2 发送消息（下一问题 + 回答）
+
+**POST** `/api/v1/conversation/sessions/{id}/message/`
+
+**请求：**
+```json
+{ "message": "3 栋，每栋 5 层" }
+```
+
+**响应 (200)：**
+```json
+{ "success": true, "data": { "stage": "s3_building", "next_question": "请录入第 1 栋的建筑名称", "extracted": {"building_count": 3} } }
+```
+
+### 16.3 获取会话状态
+
+**GET** `/api/v1/conversation/sessions/{id}/`
+
+**响应 (200)：** 返回 `current_stage`、`stage_status`、`draft_payload`（断点续采用）。
+
+### 16.4 保存草稿
+
+**PUT** `/api/v1/conversation/sessions/{id}/draft/`
+
+**请求：**
+```json
+{ "draft_payload": { "rooms": [{"room_name":"光刻间","status":"draft"}] } }
+```
+
+**响应 (200)：** `{ "success": true }`（房间以 `room.status = draft` 暂存）。
+
+### 16.5 完成
+
+**POST** `/api/v1/conversation/sessions/{id}/finalize/`
+
+**响应 (200)：** 将草稿 `room.status` 由 draft 转为 active，标记会话完成，返回汇总预览。
+
+### 16.6 获取会话消息历史
+
+**GET** `/api/v1/conversation/sessions/{id}/messages/`
+
+**查询参数：** `stage`（按阶段筛选）、`limit`、`offset`
+
+**响应 (200)：**
+```json
+{
+  "success": true,
+  "data": {
+    "items": [
+      { "role": "assistant", "stage": "s3_building", "content": "请录入第 1 栋的建筑名称", "created_at": "2026-07-14T10:00:00Z" },
+      { "role": "user", "stage": "s3_building", "content": "1#厂房", "extracted": {"building_name": "1#厂房"}, "created_at": "2026-07-14T10:00:05Z" }
+    ],
+    "total": 24
+  }
+}
+```
+
+> 用于断点续采时回放对话上下文、刷新页面后重建对话主区。
+
+## 附录：错误码参考
+
+| 错误码 | HTTP 状态码 | 说明 |
 |------|-------------|-------------|
-| INVALID_CREDENTIALS | 401 | Invalid username or password |
-| TOKEN_EXPIRED | 401 | Access token expired |
-| INVALID_TOKEN | 401 | Invalid token format |
-| INSUFFICIENT_PERMISSIONS | 403 | User lacks required role |
-| RESOURCE_NOT_FOUND | 404 | Requested resource doesn't exist |
-| DUPLICATE_RESOURCE | 409 | Resource already exists |
-| VALIDATION_ERROR | 400 | Input validation failed |
-| CALCULATION_ERROR | 422 | Calculation parameters invalid |
-| WEATHER_DATA_MISSING | 422 | Weather data not available |
-| EXPORT_FAILED | 500 | Report generation failed |
-| INTERNAL_ERROR | 500 | Unexpected server error |
+| INVALID_CREDENTIALS | 401 | 用户名或密码无效 |
+| TOKEN_EXPIRED | 401 | 访问令牌已过期 |
+| INVALID_TOKEN | 401 | 令牌格式无效 |
+| INSUFFICIENT_PERMISSIONS | 403 | 用户缺少所需角色 |
+| RESOURCE_NOT_FOUND | 404 | 请求的资源不存在 |
+| DUPLICATE_RESOURCE | 409 | 资源已存在 |
+| VALIDATION_ERROR | 400 | 输入校验失败 |
+| CALCULATION_ERROR | 422 | 计算参数无效 |
+| WEATHER_DATA_MISSING | 422 | 气象数据不可用 |
+| EXPORT_FAILED | 500 | 报表生成失败 |
+| INTERNAL_ERROR | 500 | 意外的服务器错误 |

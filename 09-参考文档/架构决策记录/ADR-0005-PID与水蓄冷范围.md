@@ -1,10 +1,16 @@
 # ADR-0005: P&ID Generation and Water Storage Scope
 
-**Status:** Accepted
+**Status:** Superseded (v0.5.1)
 **Date:** 2026-07-09
 **Decision Makers:** Architect, PM, Domain Expert
 
 ---
+
+---
+
+## Status Update (v0.5.1)
+
+> **本 ADR 已被 v0.5.1 范围修正取代。** 模块五「冷站配置」（含 P&ID 生成与水蓄冷配置）已在 v0.5.1 移除，仅保留「负荷分析」。因此本 ADR 决议的两项特性（P&ID 生成、水蓄冷容量配置）均不再属于 v0.5 范围。若后续重启相关特性，应新建 ADR 重新评估。
 
 ## Context
 
@@ -72,7 +78,7 @@ Storage Capacity >= (Peak Load - Base Load) × Storage Hours × Safety Factor
 
 ## Related
 
-- PRD: Section 9.5 (P&ID), Section 9.6 (Water Storage)
-- Database: `cooling_station_config`, `water_storage_config` tables
-- UI: Tab 3 P&ID viewer, Water storage configuration form
-- Roadmap: v0.6 includes ROI analysis
+- PRD: 模块五「冷站配置」已在 v0.5.1 移除（详见 PRD 修订说明 / 分支 docs/prd-revision）
+- Database: `cooling_station_config`, `water_storage_config` 表在 v0.5.1 已不再使用
+- UI: Tab 3 P&ID viewer、水蓄冷配置表单已移除
+- Roadmap: 相关特性推迟至重新评估（如重启须新建 ADR）
