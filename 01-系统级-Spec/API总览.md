@@ -1,9 +1,10 @@
 # PCB-CoolSim API 设计规范
 
-> 版本: 1.0
-> 日期: 2026-07-09
+> 版本: 1.1
+> 日期: 2026-07-14
 > 状态: 草稿
 > 基础 URL: /api/v1
+> 端点规模: 60+（认证 / 层级结构 / 计算 / 气象 / 平面图 / 导入导出 / 负荷预测 / 对话采集 / 数据管理 九大类）
 
 ---
 
@@ -122,6 +123,25 @@ X-Request-ID: {uuid} (可选，用于链路追踪)
 ```
 
 **响应 (204)：** 无内容
+
+### 2.4 获取当前用户信息
+
+**GET** `/api/v1/auth/me/`
+
+**响应 (200)：**
+```json
+{
+  "success": true,
+  "data": {
+    "id": 1,
+    "username": "engineer@example.com",
+    "email": "engineer@example.com",
+    "full_name": "John Doe",
+    "role": "engineer",
+    "permissions": ["project:read", "project:write", "calc:execute"]
+  }
+}
+```
 
 ---
 
@@ -583,6 +603,23 @@ X-Request-ID: {uuid} (可选，用于链路追踪)
 
 **响应 (204)：** 无内容
 
+### 6.6 复制功能区域
+
+**POST** `/api/v1/rooms/{id}/copy/`
+
+**请求：**
+```json
+{
+  "target_floor_id": 1,
+  "new_room_name": "电镀车间（副本）",
+  "copy_load_parameters": true,
+  "copy_air_volume_parameters": true,
+  "count": 1
+}
+```
+
+**响应 (201)：** 返回新建房间（结构同「获取房间详情」）。
+
 ---
 
 ## 7. 计算 API
@@ -744,13 +781,16 @@ X-Request-ID: {uuid} (可选，用于链路追踪)
 **请求：**
 ```json
 {
-  "simulation_type": "weather_driven",
+  "mode": "weather_driven",
   "years": 3,
   "start_date": "2023-01-01",
   "building_ids": null,
-  "room_ids": null
+  "room_ids": null,
+  "production_rate": 1.0
 }
 ```
+
+> `mode` 取值 `weather_driven`（F6-001，气象驱动逐时重算焓值）或 `ratio_coefficient`（F6-002，ADR-0003 比例系数法，静态设计负荷 × K(t, 生产负荷率)）。对应创建一条 SimulationRun 记录，结果落 DynamicLoadHourly / DynamicLoadSummary。
 
 **Response (202):**
 ```json
@@ -758,6 +798,7 @@ X-Request-ID: {uuid} (可选，用于链路追踪)
   "success": true,
   "data": {
     "task_id": "sim-dynamic-20260709-001",
+    "simulation_run_id": 42,
     "status": "processing",
     "message": "Dynamic simulation started (8760h × 3 years × 135 rooms)",
     "estimated_time_seconds": 25,
@@ -815,6 +856,22 @@ X-Request-ID: {uuid} (可选，用于链路追踪)
   }
 }
 ```
+
+### 7.6 获取逐时负荷数据
+
+**GET** `/api/v1/calculations/dynamic/{project_id}/hourly/`
+
+**查询参数：** `room_id`、`year`、`start`、`end`
+
+**响应 (200)：** 返回指定范围逐时负荷明细（每功能区域约 26280 行/3 年），支撑 26280 点图表渲染 < 3s（NF-007）。源数据来自 DynamicLoadHourly 超表。
+
+### 7.7 获取极值统计
+
+**GET** `/api/v1/calculations/dynamic/{project_id}/summary/`
+
+**查询参数：** `room_id`、`year`
+
+**响应 (200)：** 返回最大/最小/平均负荷、出现时间、总能量（聚合自 DynamicLoadSummary）。
 
 ---
 
@@ -916,19 +973,18 @@ X-Request-ID: {uuid} (可选，用于链路追踪)
 
 ## 9. 导出 API
 
-### 9.1 导出静态计算报告
+> 导出路径对齐 PRD 附录 D「导入导出接口」，统一前缀 `/api/v1/export/`。报告生成走 Celery（PDF < 30s，Excel < 10s，NF-011）。
 
-**POST** `/api/v1/exports/static-report/{project_id}/`
+### 9.1 导出静态计算报告（PDF）
 
-**请求：**
-```json
-{
-  "format": "pdf",
-  "building_ids": null,
-  "include_details": true,
-  "language": "zh"
-}
-```
+**GET** `/api/v1/export/static/{project_id}/`
+
+**查询参数：**
+| 参数 | 类型 | 必填 | 说明 |
+|-----------|------|----------|-------------|
+| building_ids | string | 否 | 逗号分隔的建筑 ID |
+| include_details | boolean | 否 | 是否含明细（默认 true） |
+| language | string | 否 | zh / en（默认 zh） |
 
 **Response (202):**
 ```json
@@ -943,30 +999,35 @@ X-Request-ID: {uuid} (可选，用于链路追踪)
 }
 ```
 
-### 9.2 导出设备清单
+### 9.2 导出设备清单（Excel）
 
-**POST** `/api/v1/exports/equipment-list/{project_id}/`
+**GET** `/api/v1/export/equipment/{project_id}/`
 
-**请求：**
-```json
-{
-  "format": "excel",
-  "building_ids": [1, 2]
-}
-```
+**查询参数：** `building_ids`（逗号分隔，可选）
 
-**Response (202):**
-```json
-{
-  "success": true,
-  "data": {
-    "task_id": "export-equipment-20260709-001",
-    "status": "processing"
-  }
-}
-```
+**Response (202):** 同 9.1 结构，`task_id` 为 `export-equipment-...`。
 
-### 9.3 下载导出文件
+### 9.3 导出负荷计算书（Excel）
+
+**GET** `/api/v1/export/calc-book/{project_id}/`
+
+**查询参数：** `building_ids`、`floor_ids`、`language`
+
+**Response (202):** 返回 task_id；计算书含各功能区域六步流水线明细与汇总，列结构与设计院冷热负荷计算书对齐（PRD 附录 A）。
+
+### 9.4 导出仿真数据（CSV）
+
+**GET** `/api/v1/export/dynamic/{project_id}/`
+
+**查询参数：**
+| 参数 | 类型 | 必填 | 说明 |
+|-----------|------|----------|-------------|
+| room_id | integer | 否 | 按功能区域筛选 |
+| year | integer | 否 | 按年份筛选 |
+
+**Response (202):** 返回 task_id；导出逐时负荷明细（约 26280 行/功能区域）。
+
+### 9.5 下载导出文件
 
 **GET** `/api/v1/exports/download/{task_id}/`
 
@@ -1021,7 +1082,7 @@ X-Request-ID: {uuid} (可选，用于链路追踪)
 
 ### 10.3 获取默认参数
 
-**GET** `/api/v1/settings/defaults/`
+**GET** `/api/v1/defaults/`
 
 **响应 (200)：**
 ```json
@@ -1043,11 +1104,190 @@ X-Request-ID: {uuid} (可选，用于链路追踪)
 }
 ```
 
+### 10.4 更新默认参数
+
+**PUT** `/api/v1/defaults/`
+
+支持系统级 / 项目级 / 建筑级 / 楼层级四级覆盖（`scope` = system / project / building / floor，PRD F9-006~F9-010），含压差渗透系数表与空气密度。
+
 ---
 
-## 11. WebSocket API
+## 11. 数据管理 API
 
-### 11.1 任务进度更新
+> 对齐 PRD 附录 D「数据管理接口」。城市/国标参数为只读预置；其余 CRUD。
+
+### 11.1 城市与国标参数（只读）
+
+**GET** `/api/v1/cities/` — 城市列表（含省份、室外设计参数概要），约 300 城市，查询 < 1s（NF-010）。
+
+**GET** `/api/v1/cities/{id}/` — 城市国标参数详情（夏季/冬季干球、湿球、室外计算参数等）。
+
+### 11.2 项目级冷冻水温度档
+
+**GET** `/api/v1/projects/{project_id}/water-temp-configs/` — 列表
+**POST** `/api/v1/projects/{project_id}/water-temp-configs/` — 新增档位（如低温 7/12、中温 12/17）
+**PUT** `/api/v1/water-temp-configs/{id}/` — 更新
+**DELETE** `/api/v1/water-temp-configs/{id}/` — 删除
+
+> 对应 WaterTempConfig 表与 ADR-0001（末端负荷按功能区域级冷冻水档分配）。
+
+### 11.3 额外负荷
+
+**GET/POST** `/api/v1/projects/{project_id}/extra-loads/`
+**GET/PUT/DELETE** `/api/v1/extra-loads/{id}/`
+
+> 对应 ExtraLoad 表（PCW、配电室空调等额外冷负荷）。
+
+### 11.4 功能区域模板
+
+**GET/POST** `/api/v1/room-templates/`
+**GET/PUT/DELETE** `/api/v1/room-templates/{id}/`
+
+> 对应 RoomTemplate 表，含系统内置 PCB 典型工艺区域参考模板（曝光区/电镀区/蚀刻区等，PRD 附录 B、F2-026）。
+
+---
+
+## 12. Excel 导入 API
+
+### 12.1 下载导入模板
+
+**GET** `/api/v1/import/template/`
+
+**查询参数：** `language`（默认 zh）
+
+**响应 (200)：** Excel 模板下载，列结构与设计院冷热负荷计算书对齐（PRD 附录 A、F2-032）。
+
+### 12.2 上传 Excel 导入
+
+**POST** `/api/v1/import/excel/{project_id}/`
+
+**请求：** 多部分表单数据（file + 可选 building_id / floor_id）
+
+**Response (202):**
+```json
+{
+  "success": true,
+  "data": {
+    "task_id": "import-excel-20260714-001",
+    "status": "processing",
+    "message": "Importing Excel, 10000+ rows < 30s (NF-003)",
+    "websocket_url": "ws://localhost:8000/ws/tasks/import-excel-20260714-001/"
+  }
+}
+```
+
+> 完成后返回校验结果：成功条数、错误行（定位到行号，PRD F2-034）、覆盖确认。
+
+---
+
+## 13. 平面图 API
+
+> 对齐 PRD 附录 D「平面图接口」（模块三 2D 可视化）。
+
+### 13.1 上传底图 PDF
+
+**POST** `/api/v1/floors/{floor_id}/floor-plan/upload/`
+
+**请求：** 多部分表单数据（PDF 文件）
+
+**响应 (200)：** 返回底图存储地址（MinIO）与解析的页面信息。
+
+### 13.2 获取平面图数据
+
+**GET** `/api/v1/floors/{floor_id}/floor-plan/`
+
+**响应 (200)：** 返回底图 URL + 绘制元素 JSON（外墙/功能区域矩形/比例尺/指北针）。
+
+### 13.3 保存平面图编辑
+
+**PUT** `/api/v1/floors/{floor_id}/floor-plan/`
+
+**请求：** 绘制元素 JSON（整层覆盖，F3-011）
+
+### 13.4 获取未关联功能区域列表
+
+**GET** `/api/v1/floors/{floor_id}/floor-plan/available-rooms/`
+
+**响应 (200)：** 当前楼层未绑定到平面图色块的功能区域列表，供绘制后关联。
+
+---
+
+## 14. 负荷预测 API
+
+> 对齐 PRD 模块十（§14）与附录 D「负荷预测接口」，共 12 端点。基于未来天气预报 + 生产负荷率配置，使用比例系数法预测未来 7×24 小时逐时负荷（功能区域级粒度）。
+
+### 14.1 创建预测场景
+
+**POST** `/api/v1/projects/{project_id}/forecast-scenarios/`
+
+**请求：**
+```json
+{
+  "scenario_name": "夏季满产预测",
+  "weather_source": "api",
+  "production_rate_profile": null,
+  "status": "active"
+}
+```
+
+### 14.2 获取场景列表
+
+**GET** `/api/v1/projects/{project_id}/forecast-scenarios/`
+
+### 14.3 更新场景配置
+
+**PUT** `/api/v1/forecast-scenarios/{id}/`
+
+### 14.4 删除场景
+
+**DELETE** `/api/v1/forecast-scenarios/{id}/` — 级联删除天气/负荷率/结果。
+
+### 14.5 更新场景状态
+
+**PUT** `/api/v1/forecast-scenarios/{id}/status/`
+
+**请求：** `{ "status": "active | paused | archived" }`
+
+> active 场景由 Celery beat 每小时自动拉取天气并重算（ADR-0002）。
+
+### 14.6 手动上传天气数据
+
+**POST** `/api/v1/forecast-scenarios/{id}/weather/upload/` — 多部分表单数据（CSV，手动模式）。
+
+### 14.7 获取天气数据概览
+
+**GET** `/api/v1/forecast-scenarios/{id}/weather/summary/` — 未来 7 天逐时天气概览 + 来源标记。
+
+### 14.8 生产负荷率配置（CRUD）
+
+**GET/POST** `/api/v1/forecast-scenarios/{id}/production-rates/`
+**GET/PUT/DELETE** `/api/v1/forecast-scenarios/{id}/production-rates/{rate_id}/`
+
+> 多段配置（值 + 持续时长），对齐 ForecastProductionRate 表。
+
+### 14.9 手动触发预测计算
+
+**POST** `/api/v1/forecast-scenarios/{id}/run/` — 异步触发，返回 task_id + websocket_url。
+
+### 14.10 获取预测结果
+
+**GET** `/api/v1/forecast-scenarios/{id}/results/`
+
+**查询参数：** `room_id`、`start`、`end`（按时间筛选）。返回 7×24=168 点逐时预测（功能区域级粒度）。
+
+### 14.11 获取历史版本列表
+
+**GET** `/api/v1/forecast-scenarios/{id}/results/versions/` — 历次预测版本（PRD §14.7 保留策略）。
+
+### 14.12 导出预测结果（CSV）
+
+**GET** `/api/v1/forecast-scenarios/{id}/results/export/`
+
+---
+
+## 15. WebSocket API
+
+### 15.1 任务进度更新
 
 **连接：** `ws://localhost:8000/ws/tasks/{task_id}/`
 
@@ -1096,11 +1336,11 @@ X-Request-ID: {uuid} (可选，用于链路追踪)
 
 ---
 
-## 12. 对话式采集 API
+## 16. 对话式采集 API
 
-对话式采集（PRD §6.10）的后端接口，与 Projects/Buildings/Rooms 等 REST 接口共享同一数据模型，采用逐区域提交 / 保存即落库语义。
+对话式采集（PRD §6.10，ADR-0007）的后端接口，共 6 个端点。与 Projects/Buildings/Rooms 等 REST 接口共享同一数据模型（project→building→floor→room + 区域参数），采用逐区域提交 / 保存即落库语义；与新建的《03-接口级-Spec/对话采集接口.md》一一对应。会话持久化对应 ConversationSession / ConversationMessage 表，房间先以 `room.status = draft` 暂存，确认后转 active（F2-057/F2-058）。
 
-### 12.1 创建或恢复会话
+### 16.1 创建或恢复会话
 
 **POST** `/api/v1/conversation/sessions/`
 
@@ -1114,7 +1354,7 @@ X-Request-ID: {uuid} (可选，用于链路追踪)
 { "success": true, "data": { "session_id": "uuid-...", "current_stage": "s1_project", "stage_status": {"s1_project":"done","s2_water_temp":"pending"} } }
 ```
 
-### 12.2 发送消息（下一问题 + 回答）
+### 16.2 发送消息（下一问题 + 回答）
 
 **POST** `/api/v1/conversation/sessions/{id}/message/`
 
@@ -1128,13 +1368,13 @@ X-Request-ID: {uuid} (可选，用于链路追踪)
 { "success": true, "data": { "stage": "s3_building", "next_question": "请录入第 1 栋的建筑名称", "extracted": {"building_count": 3} } }
 ```
 
-### 12.3 获取会话状态
+### 16.3 获取会话状态
 
 **GET** `/api/v1/conversation/sessions/{id}/`
 
 **响应 (200)：** 返回 `current_stage`、`stage_status`、`draft_payload`（断点续采用）。
 
-### 12.4 保存草稿
+### 16.4 保存草稿
 
 **PUT** `/api/v1/conversation/sessions/{id}/draft/`
 
@@ -1145,11 +1385,33 @@ X-Request-ID: {uuid} (可选，用于链路追踪)
 
 **响应 (200)：** `{ "success": true }`（房间以 `room.status = draft` 暂存）。
 
-### 12.5 完成
+### 16.5 完成
 
 **POST** `/api/v1/conversation/sessions/{id}/finalize/`
 
 **响应 (200)：** 将草稿 `room.status` 由 draft 转为 active，标记会话完成，返回汇总预览。
+
+### 16.6 获取会话消息历史
+
+**GET** `/api/v1/conversation/sessions/{id}/messages/`
+
+**查询参数：** `stage`（按阶段筛选）、`limit`、`offset`
+
+**响应 (200)：**
+```json
+{
+  "success": true,
+  "data": {
+    "items": [
+      { "role": "assistant", "stage": "s3_building", "content": "请录入第 1 栋的建筑名称", "created_at": "2026-07-14T10:00:00Z" },
+      { "role": "user", "stage": "s3_building", "content": "1#厂房", "extracted": {"building_name": "1#厂房"}, "created_at": "2026-07-14T10:00:05Z" }
+    ],
+    "total": 24
+  }
+}
+```
+
+> 用于断点续采时回放对话上下文、刷新页面后重建对话主区。
 
 ## 附录：错误码参考
 
