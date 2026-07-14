@@ -9,34 +9,53 @@ on:
 # ─────────────────────────────────────────────────────────────
 # 仓库阶段说明（2026-07-14）
 # 当前为 SSD 规范文档阶段，仓库仅含 00~10 文档目录，尚无 backend/ frontend/ 代码。
-# 代码相关 job（backend-test / frontend-test / integration-test 等）通过
-# `if: hashFiles(...)` 判断代码目录是否存在：代码不存在时自动跳过，避免误报失败；
-# 待进入代码开发阶段后，这些 job 会因目录出现而自动启用，无需再改本文件。
-# 同时已修复：Node 18→24（消除 Node 20 弃用警告）、actions 升级到最新大版本、
-# 缓存路径容错（continue-on-error，文件不存在不阻断流水线）。
+# 代码相关 job 通过前置 check-code job 检测目录是否存在，输出 has_backend / has_frontend
+# 两个 step output；后续 job 用 `needs.check-code.outputs.has_backend == 'true'` 判断，
+# 代码不存在时自动跳过，避免误报失败；进入代码开发阶段后目录出现即自动启用。
+# 注：hashFiles() 不能用于 job-level `if`（仅支持 steps 上下文），故改用 step output 方案。
+# Node 18→24（消除 Node 20 弃用警告）、actions 升级到最新大版本。
 # ─────────────────────────────────────────────────────────────
 
 jobs:
+  # ── 前置：检测代码目录是否存在（为后续 job 提供判断依据）──
+  check-code:
+    name: 检测代码目录
+    runs-on: ubuntu-latest
+    outputs:
+      has_backend: ${{ steps.detect.outputs.has_backend }}
+      has_frontend: ${{ steps.detect.outputs.has_frontend }}
+      has_mkdocs: ${{ steps.detect.outputs.has_mkdocs }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: 检测代码目录
+        id: detect
+        run: |
+          if [ -f "backend/requirements.txt" ]; then
+            echo "has_backend=true" >> "$GITHUB_OUTPUT"
+            echo "✓ backend 代码存在"
+          else
+            echo "has_backend=false" >> "$GITHUB_OUTPUT"
+            echo "ℹ backend 代码不存在（文档仓库阶段），跳过后端 job"
+          fi
+          if [ -f "frontend/package.json" ]; then
+            echo "has_frontend=true" >> "$GITHUB_OUTPUT"
+            echo "✓ frontend 代码存在"
+          else
+            echo "has_frontend=false" >> "$GITHUB_OUTPUT"
+            echo "ℹ frontend 代码不存在（文档仓库阶段），跳过前端 job"
+          fi
+          if [ -f "mkdocs.yml" ]; then
+            echo "has_mkdocs=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_mkdocs=false" >> "$GITHUB_OUTPUT"
+          fi
+
   # ── 文档质量检查（文档阶段始终执行）──
   docs-lint:
     name: 文档质量检查
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
-      - name: 检查 Markdown 文件无 CRLF 损坏
-        run: |
-          set -e
-          # 检测双倍空行损坏（连续3个以上换行视为格式异常）
-          bad=$(find . -name "*.md" -not -path "./.git/*" -not -path "./node_modules/*" \
-                -exec grep -Pl '\n\n\n\n' {} \; 2>/dev/null || true)
-          if [ -n "$bad" ]; then
-            echo "⚠️ 发现疑似格式损坏（连续空行过多）的 Markdown 文件："
-            echo "$bad"
-            echo "请检查是否被插入了多余空行。"
-            # 仅警告不失败，避免阻塞
-          fi
-          echo "✓ Markdown 格式检查完成"
 
       - name: 检查文档目录结构完整性
         run: |
@@ -63,24 +82,24 @@ jobs:
             echo "✓ ADR-$n"
           done
 
-      - name: 检查残留旧表名（应为 0 真实引用）
+      - name: 检查残留旧表名
         run: |
-          set -e
-          # coefficient_matrix 应已全部改为 RatioCoefficient
+          # coefficient_matrix 应已全部改为 RatioCoefficient（仅警告不阻断）
           hits=$(grep -rn "coefficient_matrix" --include="*.md" \
                  01-系统级-Spec 02-模块级-Spec 03-接口级-Spec 04-实现级-Spec 2>/dev/null || true)
           if [ -n "$hits" ]; then
             echo "⚠️ 发现 coefficient_matrix 残留引用（应为 RatioCoefficient）："
             echo "$hits"
+          else
+            echo "✓ 无旧表名残留"
           fi
-          echo "✓ 旧表名检查完成"
 
   # ── 后端测试（代码目录存在时才执行）──
   backend-test:
     name: 后端测试
     runs-on: ubuntu-latest
-    # 仅当 backend/requirements.txt 存在时执行；纯文档仓库阶段自动跳过
-    if: hashFiles('backend/requirements.txt') != ''
+    needs: check-code
+    if: needs.check-code.outputs.has_backend == 'true'
     services:
       postgres:
         image: postgres:16
@@ -154,8 +173,8 @@ jobs:
   frontend-test:
     name: 前端测试
     runs-on: ubuntu-latest
-    # 仅当 frontend/package.json 存在时执行；纯文档仓库阶段自动跳过
-    if: hashFiles('frontend/package.json') != ''
+    needs: check-code
+    if: needs.check-code.outputs.has_frontend == 'true'
 
     steps:
       - uses: actions/checkout@v4
@@ -169,7 +188,6 @@ jobs:
 
       - name: Cache npm
         uses: actions/cache@v4
-        # 缓存文件缺失时不阻断流水线（continue-on-error）
         continue-on-error: true
         with:
           path: |
@@ -208,11 +226,11 @@ jobs:
   integration-test:
     name: 集成测试
     runs-on: ubuntu-latest
-    needs: [backend-test, frontend-test]
+    needs: [check-code, backend-test, frontend-test]
     if: |
       always() &&
-      hashFiles('backend/requirements.txt') != '' &&
-      hashFiles('frontend/package.json') != ''
+      needs.check-code.outputs.has_backend == 'true' &&
+      needs.check-code.outputs.has_frontend == 'true'
     services:
       postgres:
         image: postgres:16
@@ -274,8 +292,10 @@ jobs:
   code-quality:
     name: 代码质量 (SonarCloud)
     runs-on: ubuntu-latest
-    needs: [backend-test, frontend-test]
-    if: hashFiles('backend/requirements.txt') != ''
+    needs: [check-code, backend-test, frontend-test]
+    if: |
+      always() &&
+      needs.check-code.outputs.has_backend == 'true'
     steps:
       - uses: actions/checkout@v4
       - name: SonarCloud Scan
@@ -288,8 +308,10 @@ jobs:
   security-scan:
     name: 安全扫描 (Snyk)
     runs-on: ubuntu-latest
-    needs: [backend-test, frontend-test]
-    if: hashFiles('backend/requirements.txt') != ''
+    needs: [check-code, backend-test, frontend-test]
+    if: |
+      always() &&
+      needs.check-code.outputs.has_backend == 'true'
     steps:
       - uses: actions/checkout@v4
       - name: Run Snyk security scan
@@ -301,7 +323,8 @@ jobs:
   docs-build:
     name: 文档构建
     runs-on: ubuntu-latest
-    if: hashFiles('mkdocs.yml') != ''
+    needs: check-code
+    if: needs.check-code.outputs.has_mkdocs == 'true'
     steps:
       - uses: actions/checkout@v4
       - name: Set up Python
@@ -322,11 +345,11 @@ jobs:
   deploy-staging:
     name: 部署 Staging
     runs-on: ubuntu-latest
-    needs: [integration-test, code-quality, security-scan]
+    needs: [check-code, integration-test, code-quality, security-scan]
     if: |
       always() &&
       github.ref == 'refs/heads/develop' &&
-      hashFiles('backend/requirements.txt') != ''
+      needs.check-code.outputs.has_backend == 'true'
     steps:
       - uses: actions/checkout@v4
       - name: Deploy to staging
@@ -338,11 +361,11 @@ jobs:
   deploy-production:
     name: 部署 Production
     runs-on: ubuntu-latest
-    needs: [integration-test, code-quality, security-scan]
+    needs: [check-code, integration-test, code-quality, security-scan]
     if: |
       always() &&
       github.ref == 'refs/heads/main' &&
-      hashFiles('backend/requirements.txt') != ''
+      needs.check-code.outputs.has_backend == 'true'
     steps:
       - uses: actions/checkout@v4
       - name: Deploy to production
@@ -354,11 +377,11 @@ jobs:
   performance-test:
     name: 性能测试
     runs-on: ubuntu-latest
-    needs: [deploy-staging]
+    needs: [check-code, deploy-staging]
     if: |
       always() &&
       github.ref == 'refs/heads/develop' &&
-      hashFiles('backend/requirements.txt') != ''
+      needs.check-code.outputs.has_backend == 'true'
     steps:
       - uses: actions/checkout@v4
       - name: Run performance tests
@@ -368,11 +391,11 @@ jobs:
   monitoring:
     name: 监控配置
     runs-on: ubuntu-latest
-    needs: [deploy-production]
+    needs: [check-code, deploy-production]
     if: |
       always() &&
       github.ref == 'refs/heads/main' &&
-      hashFiles('backend/requirements.txt') != ''
+      needs.check-code.outputs.has_backend == 'true'
     steps:
       - uses: actions/checkout@v4
       - name: Configure monitoring
