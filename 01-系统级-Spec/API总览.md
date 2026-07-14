@@ -1,55 +1,55 @@
-# PCB-CoolSim API Design Specification
+# PCB-CoolSim API 设计规范
 
-> Version: 1.0
-> Date: 2026-07-09
-> Status: Draft
-> Base URL: /api/v1
+> 版本: 1.0
+> 日期: 2026-07-09
+> 状态: 草稿
+> 基础 URL: /api/v1
 
 ---
 
-## 1. API Overview
+## 1. API 概述
 
-### 1.1 Design Principles
+### 1.1 设计原则
 
-- **RESTful:** Resources are nouns, HTTP methods are verbs
-- **Versioned:** URL path versioning (`/api/v1/`)
-- **Consistent:** Uniform response format across all endpoints
-- **Secure:** JWT authentication, role-based authorization
-- **Documented:** OpenAPI 3.0 specification
+- **RESTful:** 资源即名词，HTTP 方法即动词
+- **Versioned:** URL 路径版本控制（`/api/v1/`）
+- **Consistent:** 所有端点响应格式统一
+- **Secure:** JWT 认证，基于角色的授权
+- **Documented:** OpenAPI 3.0 规范
 
-### 1.2 Common Headers
+### 1.2 通用请求头
 
 ```
 Authorization: Bearer {access_token}
 Content-Type: application/json
 Accept: application/json
-X-Request-ID: {uuid} (optional, for tracing)
+X-Request-ID: {uuid} (可选，用于链路追踪)
 ```
 
-### 1.3 Common Response Codes
+### 1.3 通用响应状态码
 
-| Code | Meaning | Usage |
+| 状态码 | 含义 | 使用场景 |
 |------|---------|-------|
-| 200 | OK | Successful GET, PUT |
-| 201 | Created | Successful POST |
-| 204 | No Content | Successful DELETE |
-| 400 | Bad Request | Validation error |
-| 401 | Unauthorized | Invalid/missing token |
-| 403 | Forbidden | Insufficient permissions |
-| 404 | Not Found | Resource doesn't exist |
-| 409 | Conflict | Duplicate resource |
-| 422 | Unprocessable Entity | Business logic error |
-| 500 | Internal Server Error | Server error |
+| 200 | 成功 | GET、PUT 成功 |
+| 201 | 已创建 | POST 成功 |
+| 204 | 无内容 | DELETE 成功 |
+| 400 | 请求错误 | 校验错误 |
+| 401 | 未授权 | 令牌无效或缺失 |
+| 403 | 禁止 | 权限不足 |
+| 404 | 未找到 | 资源不存在 |
+| 409 | 冲突 | 资源重复 |
+| 422 | 不可处理实体 | 业务逻辑错误 |
+| 500 | 服务器内部错误 | 服务器错误 |
 
 ---
 
-## 2. Authentication API
+## 2. 认证 API
 
-### 2.1 Login
+### 2.1 登录
 
 **POST** `/api/v1/auth/login/`
 
-**Request:**
+**请求：**
 ```json
 {
   "username": "engineer@example.com",
@@ -57,7 +57,7 @@ X-Request-ID: {uuid} (optional, for tracing)
 }
 ```
 
-**Response (200):**
+**响应 (200)：**
 ```json
 {
   "success": true,
@@ -77,7 +77,7 @@ X-Request-ID: {uuid} (optional, for tracing)
 }
 ```
 
-**Error (401):**
+**错误 (401)：**
 ```json
 {
   "success": false,
@@ -88,18 +88,18 @@ X-Request-ID: {uuid} (optional, for tracing)
 }
 ```
 
-### 2.2 Refresh Token
+### 2.2 刷新令牌
 
 **POST** `/api/v1/auth/refresh/`
 
-**Request:**
+**请求：**
 ```json
 {
   "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
 }
 ```
 
-**Response (200):**
+**响应 (200)：**
 ```json
 {
   "success": true,
@@ -110,36 +110,36 @@ X-Request-ID: {uuid} (optional, for tracing)
 }
 ```
 
-### 2.3 Logout
+### 2.3 登出
 
 **POST** `/api/v1/auth/logout/`
 
-**Request:**
+**请求：**
 ```json
 {
   "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
 }
 ```
 
-**Response (204):** No Content
+**响应 (204)：** 无内容
 
 ---
 
-## 3. Projects API
+## 3. 项目 API
 
-### 3.1 List Projects
+### 3.1 项目列表
 
 **GET** `/api/v1/projects/`
 
-**Query Parameters:**
-| Parameter | Type | Required | Description |
+**查询参数：**
+| 参数 | 类型 | 必填 | 说明 |
 |-----------|------|----------|-------------|
-| page | integer | No | Page number (default: 1) |
-| page_size | integer | No | Items per page (default: 20, max: 100) |
-| search | string | No | Search by name or code |
-| status | string | No | Filter by status (active, archived) |
+| page | integer | 否 | 页码（默认：1） |
+| page_size | integer | 否 | 每页条数（默认：20，最大：100） |
+| search | string | 否 | 按名称或编码搜索 |
+| status | string | 否 | 按状态筛选（active、archived） |
 
-**Response (200):**
+**响应 (200)：**
 ```json
 {
   "success": true,
@@ -172,11 +172,11 @@ X-Request-ID: {uuid} (optional, for tracing)
 }
 ```
 
-### 3.2 Create Project
+### 3.2 创建项目
 
 **POST** `/api/v1/projects/`
 
-**Request:**
+**请求：**
 ```json
 {
   "project_name": "深圳宝安 PCB 工厂",
@@ -187,7 +187,7 @@ X-Request-ID: {uuid} (optional, for tracing)
 }
 ```
 
-**Response (201):**
+**响应 (201)：**
 ```json
 {
   "success": true,
@@ -221,11 +221,11 @@ X-Request-ID: {uuid} (optional, for tracing)
 }
 ```
 
-### 3.3 Get Project Details
+### 3.3 获取项目详情
 
 **GET** `/api/v1/projects/{id}/`
 
-**Response (200):**
+**响应 (200)：**
 ```json
 {
   "success": true,
@@ -259,11 +259,11 @@ X-Request-ID: {uuid} (optional, for tracing)
 }
 ```
 
-### 3.4 Update Project
+### 3.4 更新项目
 
 **PUT** `/api/v1/projects/{id}/`
 
-**Request:**
+**请求：**
 ```json
 {
   "project_name": "上海松江 AI 服务器 PCB 工厂（二期）",
@@ -271,19 +271,19 @@ X-Request-ID: {uuid} (optional, for tracing)
 }
 ```
 
-**Response (200):** Same as Get Project Details
+**响应 (200)：** 同「获取项目详情」
 
-### 3.5 Delete Project
+### 3.5 删除项目
 
 **DELETE** `/api/v1/projects/{id}/`
 
-**Response (204):** No Content
+**响应 (204)：** 无内容
 
-### 3.6 Get Project Summary
+### 3.6 获取项目汇总
 
 **GET** `/api/v1/projects/{id}/summary/`
 
-**Response (200):**
+**响应 (200)：**
 ```json
 {
   "success": true,
@@ -314,20 +314,20 @@ X-Request-ID: {uuid} (optional, for tracing)
 
 ---
 
-## 4. Buildings API
+## 4. 建筑 API
 
-### 4.1 List Buildings
+### 4.1 建筑列表
 
 **GET** `/api/v1/buildings/?project={project_id}`
 
-**Query Parameters:**
-| Parameter | Type | Required | Description |
+**查询参数：**
+| 参数 | 类型 | 必填 | 说明 |
 |-----------|------|----------|-------------|
-| project | integer | Yes | Project ID |
-| page | integer | No | Page number |
-| page_size | integer | No | Items per page |
+| project | integer | 是 | 项目 ID |
+| page | integer | 否 | 页码 |
+| page_size | integer | 否 | 每页条数 |
 
-**Response (200):**
+**响应 (200)：**
 ```json
 {
   "success": true,
@@ -348,11 +348,11 @@ X-Request-ID: {uuid} (optional, for tracing)
 }
 ```
 
-### 4.2 Create Building
+### 4.2 创建建筑
 
 **POST** `/api/v1/buildings/`
 
-**Request:**
+**请求：**
 ```json
 {
   "project_id": 1,
@@ -362,7 +362,7 @@ X-Request-ID: {uuid} (optional, for tracing)
 }
 ```
 
-**Response (201):**
+**响应 (201)：**
 ```json
 {
   "success": true,
@@ -379,13 +379,13 @@ X-Request-ID: {uuid} (optional, for tracing)
 
 ---
 
-## 5. Floors API
+## 5. 楼层 API
 
-### 5.1 List Floors
+### 5.1 楼层列表
 
 **GET** `/api/v1/floors/?building={building_id}`
 
-**Response (200):**
+**响应 (200)：**
 ```json
 {
   "success": true,
@@ -403,11 +403,11 @@ X-Request-ID: {uuid} (optional, for tracing)
 }
 ```
 
-### 5.2 Create Floor
+### 5.2 创建楼层
 
 **POST** `/api/v1/floors/`
 
-**Request:**
+**请求：**
 ```json
 {
   "building_id": 1,
@@ -417,21 +417,21 @@ X-Request-ID: {uuid} (optional, for tracing)
 
 ---
 
-## 6. Rooms API
+## 6. 房间 API
 
-### 6.1 List Rooms
+### 6.1 房间列表
 
 **GET** `/api/v1/rooms/?floor={floor_id}`
 
-**Query Parameters:**
-| Parameter | Type | Required | Description |
+**查询参数：**
+| 参数 | 类型 | 必填 | 说明 |
 |-----------|------|----------|-------------|
-| floor | integer | Yes | Floor ID |
-| page | integer | No | Page number |
-| page_size | integer | No | Items per page |
-| search | string | No | Search by name or code |
+| floor | integer | 是 | 楼层 ID |
+| page | integer | 否 | 页码 |
+| page_size | integer | 否 | 每页条数 |
+| search | string | 否 | 按名称或编码搜索 |
 
-**Response (200):**
+**响应 (200)：**
 ```json
 {
   "success": true,
@@ -457,11 +457,11 @@ X-Request-ID: {uuid} (optional, for tracing)
 }
 ```
 
-### 6.2 Create Room
+### 6.2 创建房间
 
 **POST** `/api/v1/rooms/`
 
-**Request:**
+**请求：**
 ```json
 {
   "floor_id": 1,
@@ -493,7 +493,7 @@ X-Request-ID: {uuid} (optional, for tracing)
 }
 ```
 
-**Response (201):**
+**响应 (201)：**
 ```json
 {
   "success": true,
@@ -511,11 +511,11 @@ X-Request-ID: {uuid} (optional, for tracing)
 }
 ```
 
-### 6.3 Get Room Details
+### 6.3 获取房间详情
 
 **GET** `/api/v1/rooms/{id}/`
 
-**Response (200):**
+**响应 (200)：**
 ```json
 {
   "success": true,
@@ -571,29 +571,29 @@ X-Request-ID: {uuid} (optional, for tracing)
 }
 ```
 
-### 6.4 Update Room
+### 6.4 更新房间
 
 **PUT** `/api/v1/rooms/{id}/`
 
-**Request:** Same as Create Room (partial updates supported)
+**请求：** 同「创建房间」（支持部分更新）
 
-### 6.5 Delete Room
+### 6.5 删除房间
 
 **DELETE** `/api/v1/rooms/{id}/`
 
-**Response (204):** No Content
+**响应 (204)：** 无内容
 
 ---
 
-## 7. Calculations API
+## 7. 计算 API
 
-### 7.1 Calculate Static Load (Single Room)
+### 7.1 计算静态负荷（单房间）
 
 **POST** `/api/v1/rooms/{id}/calculate-static/`
 
-**Request:** No body required (uses current room parameters)
+**请求：** 无需请求体（使用当前房间参数）
 
-**Response (200):**
+**响应 (200)：**
 ```json
 {
   "success": true,
@@ -648,11 +648,11 @@ X-Request-ID: {uuid} (optional, for tracing)
 }
 ```
 
-### 7.2 Calculate Static Load (Batch)
+### 7.2 计算静态负荷（批量）
 
 **POST** `/api/v1/projects/{id}/calculate-static/`
 
-**Request:**
+**请求：**
 ```json
 {
   "building_ids": [1, 2],
@@ -675,18 +675,18 @@ X-Request-ID: {uuid} (optional, for tracing)
 }
 ```
 
-### 7.3 Get Static Calculation Results
+### 7.3 获取静态计算结果
 
 **GET** `/api/v1/calculations/static/{project_id}/`
 
-**Query Parameters:**
-| Parameter | Type | Required | Description |
+**查询参数：**
+| 参数 | 类型 | 必填 | 说明 |
 |-----------|------|----------|-------------|
-| building_id | integer | No | Filter by building |
-| floor_id | integer | No | Filter by floor |
-| water_tier_id | integer | No | Filter by water temperature tier |
+| building_id | integer | 否 | 按建筑筛选 |
+| floor_id | integer | 否 | 按楼层筛选 |
+| water_tier_id | integer | 否 | 按水温梯度筛选 |
 
-**Response (200):**
+**响应 (200)：**
 ```json
 {
   "success": true,
@@ -737,11 +737,11 @@ X-Request-ID: {uuid} (optional, for tracing)
 }
 ```
 
-### 7.4 Run Dynamic Simulation
+### 7.4 运行动态仿真
 
 **POST** `/api/v1/projects/{id}/simulate/`
 
-**Request:**
+**请求：**
 ```json
 {
   "simulation_type": "weather_driven",
@@ -766,19 +766,19 @@ X-Request-ID: {uuid} (optional, for tracing)
 }
 ```
 
-### 7.5 Get Simulation Results
+### 7.5 获取仿真结果
 
 **GET** `/api/v1/calculations/dynamic/{project_id}/`
 
-**Query Parameters:**
-| Parameter | Type | Required | Description |
+**查询参数：**
+| 参数 | 类型 | 必填 | 说明 |
 |-----------|------|----------|-------------|
-| room_id | integer | No | Filter by room |
-| year | integer | No | Filter by year |
-| month | integer | No | Filter by month |
-| aggregation | string | No | hourly, daily, monthly |
+| room_id | integer | 否 | 按房间筛选 |
+| year | integer | 否 | 按年份筛选 |
+| month | integer | 否 | 按月份筛选 |
+| aggregation | string | 否 | hourly、daily、monthly |
 
-**Response (200):**
+**响应 (200)：**
 ```json
 {
   "success": true,
@@ -818,21 +818,21 @@ X-Request-ID: {uuid} (optional, for tracing)
 
 ---
 
-## 8. Weather API
+## 8. 气象 API
 
-### 8.1 Get Weather Data
+### 8.1 获取气象数据
 
 **GET** `/api/v1/weather/?city={city_id}`
 
-**Query Parameters:**
-| Parameter | Type | Required | Description |
+**查询参数：**
+| 参数 | 类型 | 必填 | 说明 |
 |-----------|------|----------|-------------|
-| city | integer | Yes | City ID |
-| year | integer | No | Filter by year |
-| start_date | string | No | Start date (YYYY-MM-DD) |
-| end_date | string | No | End date (YYYY-MM-DD) |
+| city | integer | 是 | 城市 ID |
+| year | integer | 否 | 按年份筛选 |
+| start_date | string | 否 | 开始日期（YYYY-MM-DD） |
+| end_date | string | 否 | 结束日期（YYYY-MM-DD） |
 
-**Response (200):**
+**响应 (200)：**
 ```json
 {
   "success": true,
@@ -858,11 +858,11 @@ X-Request-ID: {uuid} (optional, for tracing)
 }
 ```
 
-### 8.2 Fetch Weather Data from API
+### 8.2 从 API 获取气象数据
 
 **POST** `/api/v1/weather/fetch/`
 
-**Request:**
+**请求：**
 ```json
 {
   "city_id": 1,
@@ -883,13 +883,13 @@ X-Request-ID: {uuid} (optional, for tracing)
 }
 ```
 
-### 8.3 Upload Weather Data
+### 8.3 上传气象数据
 
 **POST** `/api/v1/weather/upload/`
 
-**Request:** Multipart form data with CSV or EPW file
+**请求：** 包含 CSV 或 EPW 文件的多部分表单数据
 
-**Response (200):**
+**响应 (200)：**
 ```json
 {
   "success": true,
@@ -914,13 +914,13 @@ X-Request-ID: {uuid} (optional, for tracing)
 
 ---
 
-## 9. Exports API
+## 9. 导出 API
 
-### 9.1 Export Static Calculation Report
+### 9.1 导出静态计算报告
 
 **POST** `/api/v1/exports/static-report/{project_id}/`
 
-**Request:**
+**请求：**
 ```json
 {
   "format": "pdf",
@@ -943,11 +943,11 @@ X-Request-ID: {uuid} (optional, for tracing)
 }
 ```
 
-### 9.2 Export Equipment List
+### 9.2 导出设备清单
 
 **POST** `/api/v1/exports/equipment-list/{project_id}/`
 
-**Request:**
+**请求：**
 ```json
 {
   "format": "excel",
@@ -966,21 +966,21 @@ X-Request-ID: {uuid} (optional, for tracing)
 }
 ```
 
-### 9.3 Download Exported File
+### 9.3 下载导出文件
 
 **GET** `/api/v1/exports/download/{task_id}/`
 
-**Response (200):** File download (application/pdf, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, text/csv)
+**响应 (200)：** 文件下载（application/pdf、application/vnd.openxmlformats-officedocument.spreadsheetml.sheet、text/csv）
 
 ---
 
-## 10. Settings API
+## 10. 设置 API
 
-### 10.1 Get Water Temperature Configurations
+### 10.1 获取水温配置
 
 **GET** `/api/v1/settings/water-temperature/?project={project_id}`
 
-**Response (200):**
+**响应 (200)：**
 ```json
 {
   "success": true,
@@ -1006,11 +1006,11 @@ X-Request-ID: {uuid} (optional, for tracing)
 }
 ```
 
-### 10.2 Update Water Temperature Configuration
+### 10.2 更新水温配置
 
 **PUT** `/api/v1/settings/water-temperature/{id}/`
 
-**Request:**
+**请求：**
 ```json
 {
   "name": "低温（修改）",
@@ -1019,11 +1019,11 @@ X-Request-ID: {uuid} (optional, for tracing)
 }
 ```
 
-### 10.3 Get Default Parameters
+### 10.3 获取默认参数
 
 **GET** `/api/v1/settings/defaults/`
 
-**Response (200):**
+**响应 (200)：**
 ```json
 {
   "success": true,
@@ -1047,11 +1047,11 @@ X-Request-ID: {uuid} (optional, for tracing)
 
 ## 11. WebSocket API
 
-### 11.1 Task Progress Updates
+### 11.1 任务进度更新
 
-**Connection:** `ws://localhost:8000/ws/tasks/{task_id}/`
+**连接：** `ws://localhost:8000/ws/tasks/{task_id}/`
 
-**Messages (Server → Client):**
+**消息（服务端 → 客户端）：**
 ```json
 {
   "type": "progress",
@@ -1096,73 +1096,73 @@ X-Request-ID: {uuid} (optional, for tracing)
 
 ---
 
-## 12. Conversation (Dialogue Acquisition) API
+## 12. 对话式采集 API
 
 对话式采集（PRD §6.10）的后端接口，与 Projects/Buildings/Rooms 等 REST 接口共享同一数据模型，采用逐区域提交 / 保存即落库语义。
 
-### 12.1 Create or Resume Session
+### 12.1 创建或恢复会话
 
 **POST** `/api/v1/conversation/sessions/`
 
-**Request:**
+**请求：**
 ```json
 { "project_id": 2, "resume_session_id": null }
 ```
 
-**Response (200):**
+**响应 (200)：**
 ```json
 { "success": true, "data": { "session_id": "uuid-...", "current_stage": "s1_project", "stage_status": {"s1_project":"done","s2_water_temp":"pending"} } }
 ```
 
-### 12.2 Send Message (Next Question + Answer)
+### 12.2 发送消息（下一问题 + 回答）
 
 **POST** `/api/v1/conversation/sessions/{id}/message/`
 
-**Request:**
+**请求：**
 ```json
 { "message": "3 栋，每栋 5 层" }
 ```
 
-**Response (200):**
+**响应 (200)：**
 ```json
 { "success": true, "data": { "stage": "s3_building", "next_question": "请录入第 1 栋的建筑名称", "extracted": {"building_count": 3} } }
 ```
 
-### 12.3 Get Session State
+### 12.3 获取会话状态
 
 **GET** `/api/v1/conversation/sessions/{id}/`
 
-**Response (200):** 返回 `current_stage`、`stage_status`、`draft_payload`（断点续采用）。
+**响应 (200)：** 返回 `current_stage`、`stage_status`、`draft_payload`（断点续采用）。
 
-### 12.4 Save Draft
+### 12.4 保存草稿
 
 **PUT** `/api/v1/conversation/sessions/{id}/draft/`
 
-**Request:**
+**请求：**
 ```json
 { "draft_payload": { "rooms": [{"room_name":"光刻间","status":"draft"}] } }
 ```
 
-**Response (200):** `{ "success": true }`（房间以 `room.status = draft` 暂存）。
+**响应 (200)：** `{ "success": true }`（房间以 `room.status = draft` 暂存）。
 
-### 12.5 Finalize
+### 12.5 完成
 
 **POST** `/api/v1/conversation/sessions/{id}/finalize/`
 
-**Response (200):** 将草稿 `room.status` 由 draft 转为 active，标记会话完成，返回汇总预览。
+**响应 (200)：** 将草稿 `room.status` 由 draft 转为 active，标记会话完成，返回汇总预览。
 
-## Appendix: Error Codes Reference
+## 附录：错误码参考
 
-| Code | HTTP Status | Description |
+| 错误码 | HTTP 状态码 | 说明 |
 |------|-------------|-------------|
-| INVALID_CREDENTIALS | 401 | Invalid username or password |
-| TOKEN_EXPIRED | 401 | Access token expired |
-| INVALID_TOKEN | 401 | Invalid token format |
-| INSUFFICIENT_PERMISSIONS | 403 | User lacks required role |
-| RESOURCE_NOT_FOUND | 404 | Requested resource doesn't exist |
-| DUPLICATE_RESOURCE | 409 | Resource already exists |
-| VALIDATION_ERROR | 400 | Input validation failed |
-| CALCULATION_ERROR | 422 | Calculation parameters invalid |
-| WEATHER_DATA_MISSING | 422 | Weather data not available |
-| EXPORT_FAILED | 500 | Report generation failed |
-| INTERNAL_ERROR | 500 | Unexpected server error |
+| INVALID_CREDENTIALS | 401 | 用户名或密码无效 |
+| TOKEN_EXPIRED | 401 | 访问令牌已过期 |
+| INVALID_TOKEN | 401 | 令牌格式无效 |
+| INSUFFICIENT_PERMISSIONS | 403 | 用户缺少所需角色 |
+| RESOURCE_NOT_FOUND | 404 | 请求的资源不存在 |
+| DUPLICATE_RESOURCE | 409 | 资源已存在 |
+| VALIDATION_ERROR | 400 | 输入校验失败 |
+| CALCULATION_ERROR | 422 | 计算参数无效 |
+| WEATHER_DATA_MISSING | 422 | 气象数据不可用 |
+| EXPORT_FAILED | 500 | 报表生成失败 |
+| INTERNAL_ERROR | 500 | 意外的服务器错误 |
