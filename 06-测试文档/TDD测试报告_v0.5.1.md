@@ -3,11 +3,11 @@
 | 项目 | PCB-CoolSim（PCB 工厂冷量仿真平台） |
 |------|------|
 | 分支 | `feat/code-scaffold` |
-| 最新提交 | `746bc2e test(tdd): 第十批 Tab1 BasicConfig` |
+| 最新提交 | `6a16626 test(tdd): 第十一批 Tab2+Tab3` |
 | 测试日期 | 2026-07-15 |
-| 后端框架 | pytest 8.2 + pytest-django 4.8 + pytest-cov 5.0 |
-| 前端框架 | Vitest + React Testing Library + jsdom |
-| 测试环境 | Python 3.13 / Django 5.0.6 / Node 24 / SQLite(in-memory) |
+| 后端 | pytest 8.2 + pytest-django 4.8 + pytest-cov 5.0 |
+| 前端 | Vitest + React Testing Library + jsdom |
+| 环境 | Python 3.13 / Django 5.0.6 / Node 24 / SQLite(in-memory) |
 
 ---
 
@@ -15,36 +15,38 @@
 
 | 指标 | 后端 | 前端 | 合计 |
 |------|:----:|:----:|:----:|
-| **用例总数** | 143 | 25 | **168** |
-| **通过** | 143 ✅ | 25 ✅ | **168 ✅** |
+| **用例总数** | 143 | 37 | **180** |
+| **通过** | 143 ✅ | 37 ✅ | **180 ✅** |
 | **失败** | 0 | 0 | **0** |
 | **通过率** | 100% | 100% | **100%** |
 | **覆盖率** | 97% | — | — |
-| **结论** | 🟢 | 🟢 | 🟢 **全部通过** |
 
 ---
 
-## 二、前端测试明细（25 测试，5 文件）
+## 二、前端测试明细（37 测试，7 文件）
 
-| 组件 | 测试文件 | 用例 | PRD |
-|------|---------|:----:|-----|
-| 登录页 | Login.test.tsx | 4 | F1-001~006 |
-| 工作台 6 Tab | Workbench.test.tsx | 5 | F2-001~008 |
-| 地图首页 | MapHome.test.tsx | 5 | F1-007~014 |
-| 系统设置 | Settings.test.tsx | 4 | F9-001~018 |
-| Tab1 基础配置 | BasicConfig.test.tsx | 7 | F2-001~020 |
+| 组件 | 用例 | PRD |
+|------|:----:|-----|
+| Login | 4 | F1-001~006 |
+| Workbench 6 Tab | 5 | F2-001~008 |
+| MapHome | 5 | F1-007~014 |
+| Settings 4 Tab | 4 | F9-001~018 |
+| Tab1 BasicConfig | 7 | F2-001~020 |
+| Tab2 StaticCalc | 6 | F4-001~033 |
+| Tab3 LoadAnalysis | 6 | F5-001~007 |
 
 ---
 
-## 三、TDD 流程总结（10 批迭代）
+## 三、TDD 流程总结（11 批迭代）
 
 | 批次 | 模块 | 用例 |
 |------|------|:----:|
-| 1-7 后端 | F1~F10 全模块 API + services + models | 143 |
+| 1-7 后端 | F1~F10 全模块 | 143 |
 | 8 | 前端 Login + Workbench | 9 |
 | 9 | 前端 MapHome + Settings | 9 |
 | 10 | 前端 Tab1 BasicConfig | 7 |
-| **合计** | | **168** |
+| 11 | 前端 Tab2 + Tab3 | 12 |
+| **合计** | | **180** |
 
 ---
 
@@ -52,7 +54,7 @@
 
 | # | 项目 | 优先级 |
 |---|------|--------|
-| 1 | 工作台 Tab2~Tab6 业务组件 | P1 |
+| 1 | Tab4~Tab6 业务组件 | P1 |
 | 2 | 2D 编辑器 Canvas 组件 | P2 |
 | 3 | 对话采集页三栏 Codex 布局 | P2 |
 | 4 | 集成测试（PG+TimescaleDB） | P2 |
