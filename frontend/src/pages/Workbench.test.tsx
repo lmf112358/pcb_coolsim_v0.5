@@ -43,8 +43,8 @@ describe("Workbench Page", () => {
 
   it("shows tree panel on Tab1 (基础配置)", async () => {
     renderWorkbench();
-    // 左侧树形导航标题
-    expect(screen.getByText(/层级结构/i)).toBeInTheDocument();
+    // 左侧树形导航标题（Workbench 顶层 Sider 与 BasicConfig 内部均含此标题）
+    expect(screen.getAllByText(/层级结构/i).length).toBeGreaterThan(0);
   });
 
   it("switches to Tab2 (静态计算) on click", async () => {

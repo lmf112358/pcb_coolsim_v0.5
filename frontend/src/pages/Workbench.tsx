@@ -2,6 +2,12 @@ import { useState } from "react";
 import { Layout, Tabs, Tree, Card, Typography, Space, Button } from "antd";
 import { SettingOutlined } from "@ant-design/icons";
 import { useNavigate, useParams } from "react-router-dom";
+import BasicConfig from "@/components/workbench/BasicConfig";
+import StaticCalc from "@/components/workbench/StaticCalc";
+import LoadAnalysis from "@/components/workbench/LoadAnalysis";
+import DynamicSim from "@/components/workbench/DynamicSim";
+import View2D from "@/components/workbench/View2D";
+import Forecast from "@/components/workbench/Forecast";
 
 const { Header, Sider, Content } = Layout;
 const { Title, Text } = Typography;
@@ -14,7 +20,7 @@ const TAB_ITEMS = [
   { key: "dynamic", label: "动态仿真" },
   { key: "view2d", label: "2D展示" },
   { key: "forecast", label: "负荷预测" },
-];
+] as const;
 
 /**
  * 项目工作台（F2-001~008，左树右详情 6 Tab）
@@ -24,6 +30,26 @@ export default function Workbench() {
   const { projectId } = useParams();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("basic");
+  const pid = Number(projectId);
+
+  const renderTabContent = (key: string) => {
+    switch (key) {
+      case "basic":
+        return <BasicConfig projectId={pid} />;
+      case "static":
+        return <StaticCalc projectId={pid} />;
+      case "analysis":
+        return <LoadAnalysis projectId={pid} />;
+      case "dynamic":
+        return <DynamicSim projectId={pid} />;
+      case "view2d":
+        return <View2D projectId={pid} />;
+      case "forecast":
+        return <Forecast projectId={pid} />;
+      default:
+        return null;
+    }
+  };
 
   return (
     <Layout style={{ minHeight: "100vh" }}>
@@ -86,13 +112,7 @@ export default function Workbench() {
             items={TAB_ITEMS.map((tab) => ({
               key: tab.key,
               label: tab.label,
-              children: (
-                <Card>
-                  <Text type="secondary">
-                    {tab.label} — 待按 PRD 实现具体内容（功能区域参数录入/计算结果/分析图表等）
-                  </Text>
-                </Card>
-              ),
+              children: renderTabContent(tab.key),
             }))}
           />
         </Content>

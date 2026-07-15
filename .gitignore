@@ -278,6 +278,9 @@ build/
 # Large test data files (if needed)
 # PCB工厂测试数据_*.xlsx
 
+# Files starting with underscore (e.g. _draft.md, _notes.txt)
+_*
+
 # Documentation build artifacts
 docs/_build/
 
