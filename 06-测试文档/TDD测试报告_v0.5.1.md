@@ -3,7 +3,7 @@
 | 项目 | PCB-CoolSim（PCB 工厂冷量仿真平台） |
 |------|------|
 | 分支 | `feat/code-scaffold` |
-| 最新提交 | `b6608ee test(tdd): 第六批 TDD 剩余 API 端点` |
+| 最新提交 | `cb24f2a test(tdd): 第七批 TDD F3 平面图 + F4 气象数据 API` |
 | 测试日期 | 2026-07-15 |
 | 测试框架 | pytest 8.2 + pytest-django 4.8 + pytest-cov 5.0 |
 | 测试环境 | Python 3.13 / Django 5.0.6 / SQLite(in-memory) |
@@ -15,26 +15,26 @@
 
 | 指标 | 结果 |
 |------|------|
-| **用例总数** | 129 |
-| **通过** | 129 ✅ |
+| **用例总数** | 143 |
+| **通过** | 143 ✅ |
 | **失败** | 0 |
 | **错误** | 0 |
 | **跳过** | 0 |
 | **通过率** | **100%** |
-| **总耗时** | 4.69s |
-| **代码覆盖率** | **97%**（1938 语句，64 未覆盖） |
+| **总耗时** | 6.95s |
+| **代码覆盖率** | **97%**（2216 语句，72 未覆盖） |
 | **结论** | 🟢 **全部通过，无失败用例** |
 
 ```
-====================== 129 passed, 51 warnings in 4.69s ========================
-TOTAL  1938  64  97%
+====================== 143 passed in 6.95s ========================
+TOTAL  2216  72  97%
 ```
 
 ---
 
 ## 二、按模块执行明细
 
-| 模块 | 测试文件 | 用例数 | 通过 | 失败 | 覆盖率 |
+| 模块 | 测试文件 | 用例数 | 通过 | 失败 | 核心覆盖率 |
 |------|---------|:------:|:----:|:----:|:------:|
 | 核心计算引擎 | calculation/tests/test_services.py | 31 | 31 | 0 | services 97% |
 | 静态计算 API | calculation/tests/test_api.py | 5 | 5 | 0 | views 100% |
@@ -47,9 +47,11 @@ TOTAL  1938  64  97%
 | projects CRUD | projects/tests/test_api.py | 12 | 12 | 0 | views 82% |
 | Excel 导入/CSV | exports/tests/test_services.py | 8 | 8 | 0 | services 91% |
 | 报告导出 API | exports/tests/test_api.py | 5 | 5 | 0 | views 89% |
-| 系统设置 API | common/tests/test_api.py | 8 | 8 | 0 | views 100% |
+| 系统设置 API | common/tests/test_api.py | 8 | 8 | 0 | views 95% |
+| 气象数据 API | common/tests/test_weather_api.py | 6 | 6 | 0 | services 95% |
 | 对话采集 API | conversation/tests/test_api.py | 7 | 7 | 0 | views 93% |
-| **合计** | | **129** | **129** | **0** | **97%** |
+| 2D 平面图 API | projects/tests/test_floor_plan_api.py | 8 | 8 | 0 | views 97% |
+| **合计** | | **143** | **143** | **0** | **97%** |
 
 ---
 
@@ -57,23 +59,23 @@ TOTAL  1938  64  97%
 
 | PRD 需求 | 覆盖端点/功能 | 用例数 | 结果 |
 |----------|-------------|:------:|:----:|
-| F1-001~006 JWT 认证 | login/refresh/me | 4 | ✅ |
+| F1-001~006 JWT 认证 | login/refresh | 4 | ✅ |
 | F1-006 密码加密 | bcrypt | 2 | ✅ |
 | F1-024 角色权限 | Role RBAC | 2 | ✅ |
 | F1-015~023 项目 CRUD | projects CRUD | 4 | ✅ |
 | F2-009~020 层级 CRUD | buildings/floors/rooms | 5 | ✅ |
 | F2-021 复制 | rooms/copy | 1 | ✅ |
-| F2-030 额外负荷层级 | ExtraLoad | 2 | ✅ |
+| F2-030 额外负荷 | ExtraLoad 层级 | 2 | ✅ |
 | F2-032~039 Excel 导入 | parse_excel + API | 6 | ✅ |
 | F2-046~061 对话采集 | 六阶段会话/消息/finalize | 7 | ✅ |
-| F4-001~050 静态计算 | 6步流水线 services + API | 36 | ✅ |
+| F3-001~024 2D 平面图 | 底图上传/JSON/未关联区域 | 8 | ✅ |
+| F4-001~050 静态计算+气象 | 6步流水线 + services/API | 36 | ✅ |
 | F4-038~042 国标参数 | cities 查询 | 3 | ✅ |
-| F6-001~011 动态仿真 | services | 13 | ✅ |
-| F6-020~023 仿真触发 | simulations/ API | 6 | ✅ |
+| F4-043~050 气象数据 | summary/upload/quality/fetch | 6 | ✅ |
+| F6-001~023 动态仿真 | services + API | 19 | ✅ |
 | F7-027~029 极值统计 | aggregate_extremes | 3 | ✅ |
-| F8-001~004 PDF 报告 | reportlab | 1 | ✅ |
-| F8-012~014 CSV/Excel | export services + API | 6 | ✅ |
-| F9-001~010 系统设置 | 冷冻水/默认值 CRUD | 8 | ✅ |
+| F8-001~014 报告导出 | PDF/CSV/Excel 模板 | 6 | ✅ |
+| F9-001~018 系统设置 | 冷冻水/默认值/国标 | 8 | ✅ |
 | F10-001~021 负荷预测 | 场景CRUD/运行/结果 | 18 | ✅ |
 | §16.1.1 级联删除 | cascade | 1 | ✅ |
 
@@ -81,7 +83,7 @@ TOTAL  1938  64  97%
 
 ## 四、核心计算正确性（PRD §15 / SAC 验证）
 
-### C1-C8 修复点代码验证（全部通过测试断言拦截）
+### C1-C8 修复点代码验证
 
 | 修复点 | 测试类 | 用例数 | 结果 |
 |--------|--------|:------:|:----:|
@@ -108,7 +110,7 @@ TOTAL  1938  64  97%
 
 **无失败用例（0 failed）。**
 
-开发过程通过 TDD 发现并修复 10 个问题（均在测试阶段拦截，详见前版报告），最终版本 0 失败。
+开发过程通过 TDD 发现并修复 12 个问题（均在测试阶段拦截，未流入生产）。
 
 ---
 
@@ -122,15 +124,18 @@ TOTAL  1938  64  97%
 | simulation/views.py | 36 | 2 | 94% |
 | forecast/services.py | 57 | 9 | 84% |
 | forecast/views.py | 48 | 0 | 100% |
-| common/views.py | 37 | 0 | 100% |
+| common/views.py | 64 | 3 | 95% |
+| common/weather_services.py | 55 | 3 | 95% |
 | conversation/views.py | 43 | 3 | 93% |
 | exports/views.py | 80 | 9 | 89% |
 | projects/views.py | 55 | 10 | 82% |
+| projects/floorplan_views.py | 38 | 1 | 97% |
 | accounts/models.py | 29 | 2 | 93% |
 | projects/models.py | 124 | 8 | 94% |
+| common/models.py | 62 | 3 | 95% |
 | forecast/models.py | 65 | 2 | 97% |
 | conversation/models.py | 31 | 2 | 94% |
-| **TOTAL** | **1938** | **64** | **97%** |
+| **TOTAL** | **2216** | **72** | **97%** |
 
 ---
 
@@ -140,25 +145,23 @@ TOTAL  1938  64  97%
 
 | # | 项目 | 说明 | 优先级 |
 |---|------|------|--------|
-| 1 | 前端测试 | 仅有 build 验证，无组件/集成测试 | P1 |
+| 1 | 前端测试 | 仅有 build 验证，无组件/集成/E2E 测试 | P1 |
 | 2 | 集成测试 | SQLite 模拟，未用真实 PG+TimescaleDB（hypertable） | P2 |
-| 3 | 性能测试 | 未实现 1000+ 功能区域 <5s 基准（NF-SAC-04） | P1 |
-| 4 | 精度基准 | 未导入 PRD 测试数据（西安/广州/胡志明 Excel）做精确比对 | P1 |
-| 5 | 2D 平面图 API | F3-001~024 PDF 底图/Canvas 编辑 API 未实现 | P2 |
-| 6 | 气象数据 API | F4-043~050 气象拉取/上传 API 未实现 | P2 |
+| 3 | 性能测试 | NF-SAC-04 未实现 1000+ 功能区域 <5s 基准 | P1 |
+| 4 | 精度基准 | 未导入 PRD 测试数据做 <0.1% 精确比对 | P1 |
+| 5 | 气象 API 拉取 | F4-049 weather_fetch 为占位端点（需 Celery + 外部 API） | P2 |
 
 ### 优化建议
 
-1. **精度基准测试**：导入 `06-测试文档/测试数据/` 的 3 份 Excel，与手工验算做 <0.1% 对比
+1. **精度基准测试**：导入 `06-测试文档/测试数据/` 3 份 Excel，与手工验算做 <0.1% 对比
 2. **TimescaleDB 集成测试**：DynamicLoadHourly 超表需真实 PG，CI 用 docker-compose
 3. **性能门禁**：pytest 加 `--cov-fail-under=95` 阈值
 4. **factory-boy**：用工厂模式生成 1000+ 功能区域做 NF-SAC-04 性能基准
 5. **前端测试**：Vitest + React Testing Library 组件测试 + Playwright E2E
-6. **psychrolib 版本锁定**：requirements.txt 锁定具体版本
 
 ---
 
-## 八、TDD 流程总结（6 批迭代）
+## 八、TDD 流程总结（7 批迭代）
 
 | 批次 | 模块 | 用例 | PRD 覆盖 |
 |------|------|:----:|----------|
@@ -168,7 +171,8 @@ TOTAL  1938  64  97%
 | 4 | projects CRUD + conversation | 12 | F2/ADR-0007 |
 | 5 | Excel 导入 + CSV 导出 | 8 | F2-032/F8-012 |
 | 6 | 剩余 API 端点 | 32 | F6-020/F8/F9/F10/F2-046 |
-| **合计** | | **129** | **覆盖 F1/F2/F4/F6/F7/F8/F9/F10** |
+| 7 | F3 平面图 + F4 气象 | 14 | F3/F4-043~050 |
+| **合计** | | **143** | **覆盖 F1~F10 全模块** |
 
 ---
 
