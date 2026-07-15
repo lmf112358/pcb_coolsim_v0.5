@@ -1,4 +1,4 @@
-"""common 视图（F9 系统设置）"""
+"""common 视图（F9 系统设置 + F4-043~050 气象数据管理）"""
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from rest_framework import viewsets, status
@@ -8,6 +8,7 @@ from rest_framework.response import Response
 
 from apps.projects.models import Project
 from .models import CityConfig, WaterTempConfig
+from .weather_services import parse_weather_csv, check_weather_quality, get_weather_summary
 from .serializers import CityConfigSerializer, WaterTempConfigSerializer
 
 
@@ -63,4 +64,50 @@ def get_defaults(request):
             {"pressure_diff": 5, "k": 3.0}, {"pressure_diff": 10, "k": 3.5},
             {"pressure_diff": 15, "k": 4.0},
         ],
+    })
+
+
+# ── F4-043~050 气象数据管理 ──
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def weather_summary(request, city_id: int):
+    """F4-048: 气象数据概览"""
+    city = get_object_or_404(CityConfig, pk=city_id)
+    return Response(get_weather_summary(city))
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def weather_upload(request, city_id: int):
+    """F4-050: 手动上传 CSV/EPW 气象数据"""
+    city = get_object_or_404(CityConfig, pk=city_id)
+    f = request.FILES.get("file")
+    if not f:
+        return Response({"detail": "请上传文件"}, status=status.HTTP_400_BAD_REQUEST)
+    result = parse_weather_csv(f.read(), city)
+    if not result.get("success"):
+        return Response(result, status=status.HTTP_400_BAD_REQUEST)
+    return Response(result, status=status.HTTP_201_CREATED)
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def weather_quality(request, city_id: int):
+    """F4-044: 数据质量检查（缺失检测、时间连续性）"""
+    city = get_object_or_404(CityConfig, pk=city_id)
+    return Response(check_weather_quality(city))
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def weather_fetch(request, city_id: int):
+    """F4-049: 触发从 API 拉取气象数据（v0.5 模拟占位，生产用 Celery 异步）"""
+    city = get_object_or_404(CityConfig, pk=city_id)
+    # v0.5 占位：返回提示（生产环境触发 Celery task fetch_weather_data）
+    return Response({
+        "detail": "气象拉取任务已提交",
+        "city": city.city_name,
+        "status": "PENDING",
+        "note": "v0.5 占位端点，生产环境将触发 Celery 异步任务",
     })

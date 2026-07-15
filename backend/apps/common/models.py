@@ -78,3 +78,35 @@ class WaterTempConfig(models.Model):
 
     def __str__(self) -> str:
         return f"{self.temp_type_name} {self.supply_temp}/{self.return_temp}°C"
+
+
+class WeatherRecord(models.Model):
+    """逐时气象数据（F4-043~050）
+
+    按城市缓存，最近 3 年逐时数据（约 26280 条/城市）。
+    """
+
+    city = models.ForeignKey(
+        CityConfig, on_delete=models.CASCADE, related_name="weather_records",
+        verbose_name="城市",
+    )
+    timestamp = models.DateTimeField("观测时刻")
+    dry_bulb_temp = models.DecimalField("干球温度(℃)", max_digits=5, decimal_places=2, null=True, blank=True)
+    wet_bulb_temp = models.DecimalField("湿球温度(℃)", max_digits=5, decimal_places=2, null=True, blank=True)
+    humidity = models.DecimalField("相对湿度(%)", max_digits=5, decimal_places=2, null=True, blank=True)
+    atmospheric_pressure = models.DecimalField("大气压(hPa)", max_digits=6, decimal_places=2, null=True, blank=True)
+    wind_speed = models.DecimalField("风速(m/s)", max_digits=4, decimal_places=1, null=True, blank=True)
+    solar_radiation = models.DecimalField("太阳辐射(W/m²)", max_digits=6, decimal_places=2, null=True, blank=True)
+    source = models.CharField("数据来源", max_length=10, default="api")  # api/csv/epw
+    imputed_flag = models.BooleanField("是否插补", default=False)
+    created_at = models.DateTimeField("创建时间", auto_now_add=True)
+
+    class Meta:
+        db_table = "WeatherRecord"
+        verbose_name = "气象数据"
+        verbose_name_plural = verbose_name
+        ordering = ["timestamp"]
+        unique_together = [("city", "timestamp")]
+
+    def __str__(self) -> str:
+        return f"{self.city.city_name} {self.timestamp}"
