@@ -4,10 +4,27 @@ API 路径统一 /api/v1/ 前缀（命名基线，CLAUDE.md）
 端点对应 PRD 附录 D 与 03-接口级-Spec/ 各接口文档
 """
 from django.contrib import admin
+from django.http import JsonResponse
 from django.urls import include, path
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
+
+def api_root(request):
+    """API 根路径返回服务信息（替代 404）"""
+    return JsonResponse({
+        "service": "PCB-CoolSim API",
+        "version": "v0.5.1",
+        "status": "running",
+        "endpoints": {
+            "login": "/api/v1/auth/login/",
+            "admin": "/admin/",
+            "docs": "POST /api/v1/auth/login/ with {username, password}",
+        },
+    })
+
+
 urlpatterns = [
+    path("", api_root, name="api-root"),
     path("admin/", admin.site.urls),
 
     # 认证（F1-001~006）
