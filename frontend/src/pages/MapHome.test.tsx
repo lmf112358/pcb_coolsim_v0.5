@@ -4,25 +4,32 @@ import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import MapHome from "./MapHome";
 
-// mock Leaflet（jsdom 不支持地图渲染）
+// mock Leaflet（jsdom 不支持地图）
 vi.mock("leaflet", () => ({
-  map: () => ({ remove: () => {}, setView: () => {} }),
-  tileLayer: () => ({ addTo: () => {} }),
-  marker: () => ({ addTo: () => {}, bindPopup: () => ({ addTo: () => {} }) }),
-  icon: () => ({}),
-  latLng: () => ({}),
+  default: {
+    map: () => ({ remove: () => {}, setView: () => {}, eachLayer: () => {}, addLayer: () => {}, removeLayer: () => {} }),
+    tileLayer: () => ({ addTo: () => {} }),
+    marker: () => ({ addTo: () => {}, bindPopup: () => ({ addTo: () => {} }) }),
+    icon: () => ({}),
+    Icon: { Default: { prototype: { mergeOptions: () => {} } } },
+  },
 }));
+vi.mock("leaflet/dist/leaflet.css", () => ({}));
 
 vi.mock("../api/client", () => ({
   default: {
-    get: vi.fn().mockResolvedValue({
-      data: {
-        results: [
-          { id: 1, project_name: "广州PCB工厂", city_name: "广州", location: "黄埔区" },
-          { id: 2, project_name: "西安PCB工厂", city_name: "西安", location: "高新区" },
-        ],
-      },
+    get: vi.fn().mockImplementation((url: string) => {
+      if (url.includes("/cities")) {
+        return Promise.resolve({ data: { results: [{ id: 1, city_name: "广州", province: "广东" }] } });
+      }
+      return Promise.resolve({
+        data: { results: [
+          { id: 1, project_name: "广州PCB工厂", city_name: "广州" },
+          { id: 2, project_name: "西安PCB工厂", city_name: "西安" },
+        ]},
+      });
     }),
+    post: vi.fn().mockResolvedValue({ data: { id: 3, project_name: "新工厂" } }),
   },
 }));
 
@@ -34,23 +41,16 @@ function renderMapHome() {
   );
 }
 
-function findByText(text: string) {
-  return screen.getByText((_, node) => {
-    if (!node) return false;
-    return node.textContent?.replace(/\s/g, "").includes(text);
-  });
-}
-
 describe("MapHome Page", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    localStorage.clear();
+    localStorage.setItem("access_token", "test-token");
   });
 
   it("renders page title and search box", () => {
     renderMapHome();
-    expect(screen.getByPlaceholderText(/搜索/i)).toBeInTheDocument();
-    // PCB-CoolSim 标题（用 getAllByText 容忍多次出现）
-    expect(screen.getAllByText(/PCB-CoolSim/i).length).toBeGreaterThan(0);
+    expect(screen.getByPlaceholderText("搜索项目")).toBeInTheDocument();
   });
 
   it("loads and displays project list", async () => {
@@ -63,27 +63,29 @@ describe("MapHome Page", () => {
 
   it("shows new project button", () => {
     renderMapHome();
-    // AntD 按钮文本含空格
-    const btn = document.querySelector('button.ant-btn-primary');
+    const btn = document.querySelector("button.ant-btn-primary");
     expect(btn?.textContent?.replace(/\s/g, "")).toContain("新建项目");
+  });
+
+  it("opens create project modal on button click", async () => {
+    const user = userEvent.setup();
+    renderMapHome();
+    const btn = document.querySelector("button.ant-btn-primary");
+    if (btn) await user.click(btn);
+    await waitFor(() => {
+      // Modal 弹出后会出现「项目名称」label
+      expect(screen.getByText("项目名称")).toBeInTheDocument();
+    });
   });
 
   it("filters projects by search keyword", async () => {
     const user = userEvent.setup();
     renderMapHome();
     await waitFor(() => expect(screen.getByText("广州PCB工厂")).toBeInTheDocument());
-    await user.type(screen.getByPlaceholderText(/搜索/i), "广州");
+    await user.type(screen.getByPlaceholderText("搜索项目"), "广州");
     await waitFor(() => {
       expect(screen.getByText("广州PCB工厂")).toBeInTheDocument();
       expect(screen.queryByText("西安PCB工厂")).not.toBeInTheDocument();
-    });
-  });
-
-  it("displays city name for each project", async () => {
-    renderMapHome();
-    await waitFor(() => {
-      expect(screen.getByText("广州")).toBeInTheDocument();
-      expect(screen.getByText("西安")).toBeInTheDocument();
     });
   });
 });

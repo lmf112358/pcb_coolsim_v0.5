@@ -1,9 +1,8 @@
 import { useState, useEffect } from "react";
-import { Row, Col, Card, Table, Statistic, Typography, Empty, Divider } from "antd";
+import { Row, Col, Card, Table, Statistic, Empty } from "antd";
 import { FireOutlined } from "@ant-design/icons";
 import client from "../../api/client";
 
-const { Text } = Typography;
 
 interface RoomResult {
   room_name: string;

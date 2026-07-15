@@ -22,7 +22,6 @@ export default function LoadAnalysis({ projectId }: { projectId: number }) {
   }, [projectId, dimension]);
 
   const byRoom = data?.by_room || [];
-  const byCategory = data?.by_category || {};
   const suggestions = data?.suggestions || [];
 
   return (
@@ -56,8 +55,7 @@ export default function LoadAnalysis({ projectId }: { projectId: number }) {
           pagination={false}
           columns={[
             { title: "功能区域", dataIndex: "room_name" },
-            { title: "总负荷(kW)", dataIndex: "total_load", align: "right" as const,
-              sorter: (a, b) => a.total_load - b.total_load },
+            { title: "总负荷(kW)", dataIndex: "total_load", align: "right" as const },
           ]}
         />
       </Card>

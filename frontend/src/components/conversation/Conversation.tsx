@@ -20,7 +20,7 @@ const STAGES = [
  * 左：阶段导航 / 中：对话主区 / 右：结构化预览
  */
 export default function Conversation({ projectId }: { projectId: number }) {
-  const [currentStage, setCurrentStage] = useState(0);
+  const [currentStage] = useState(0);
   const [messages, setMessages] = useState<any[]>([]);
   const [input, setInput] = useState("");
   const [sessionId, setSessionId] = useState<number | null>(null);
