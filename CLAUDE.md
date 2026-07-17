@@ -44,7 +44,7 @@ PCB-CoolSim 是一个基于 Web 的 PCB 制造工厂冷量计算与仿真平台�
 - **React Query 5** 管理服务端状态
 - **React Context** 管理 UI 状态
 - **Leaflet** 提供地理地图
-- **Fabric.js** 提供 2D 画布编辑器
+- **Konva + react-konva** 提供 2D 画布编辑器与热力图；**pdfjs-dist** 渲染 PDF 底图；2D 编辑器内部交互态用 **Zustand** 局部 store 管理
 - **ECharts** 提供图表与可视化
 
 ### 后端
@@ -224,6 +224,8 @@ git commit -m "feat(scope): description"
 - **Room 合并为单表**（PRD 附录 A）：负荷/风量/温湿度/新风配置/末端冷冻水档全部直存 Room 表 39 字段；已删除 `room_load_parameter`/`room_air_volume_parameter`/`room_air_volume_result` 三子表与 `season_config` 表及所有 `season_id`（v0.5.1 不需季节表，气象数据本身区分季节）。
 - **工作台 Tab3 = 负荷分析**：6 Tab 完整（Tab1 基础配置 / Tab2 静态计算 / Tab3 负荷分析 / Tab4 动态仿真 / Tab5 2D展示 / Tab6 负荷预测）。对话采集页为独立全屏三栏 Codex 布局。
 - **核心计算基线（PRD §15，不可违背）**：① 末端负荷 5 项（含电热设备，kW 不乘 1000）；② 压差渗透 8 点查表线性插值（§8.3 唯一权威表，绝不用 k=ΔP/5 或 √ΔP）；③ 新风量简单加法（无 MAX/卫生/净化风量，A4 简化）；④ 新风冷负荷 ρ=1.2、室内默认 26°C/55%、定义 A 唯一公式；⑤ 总负荷 < 0 截断为 0；⑥ 末端按 `terminal_water_temp_config_id` 归档（ADR-0001，默认中温）；⑦ 动态方式二查 `RatioCoefficient` 取负荷率=100% 列。
+- **2D 画布引擎定为 Konva + react-konva + pdfjs-dist（v0.5.2 原型对齐）**：原 Fabric.js 已替换；平面图 JSON 在 v1 基础上向后兼容扩展可选字段（vertices / z_index / locked / visible / legend_code / style / metadata），version 保持 1。2D 编辑器（Floor2DEditor）内部交互态用 Zustand 局部 store；服务端数据仍走 React Query（见 04-实现级-Spec/状态管理实现.md §3.6）。
+- **模块-01 RBAC 细粒度权限码（v0.5.2 原型对齐）**：F1-029 预留接口具体化为 5 模块 12 码（simulation/monitor/report/equipment/system）；双层守卫（路由级 ProtectedRoute + 组件级 PermissionGuard）；access token 内存存储 + refresh token HttpOnly Cookie + 401 并发刷新队列。后端技术栈基线不变（Django+DRF+simplejwt），factory-management 原型（FastAPI）仅作设计参考。
 
 ### 3. 奥卡姆剃刀约束
 - 不新增未在 PRD 出现的实体/表/章节；确需补充时先在 `09-参考文档/架构决策记录/` 落 ADR（如 ADR-0006 缺失实体补齐、ADR-0007 对话采集表）。
