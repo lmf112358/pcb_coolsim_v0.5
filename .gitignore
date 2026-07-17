@@ -337,3 +337,7 @@ build/
 
 # Large test data files (if needed)
 # PCB工厂测试数据_*.xlsx
+
+# 原型参考资料（本地保留，不纳入版本控制）
+参考/
+.zcode/
